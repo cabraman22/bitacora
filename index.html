@@ -437,8 +437,21 @@ table.data tr.is-proxy td:nth-child(2)::after{content:"proxy";font-family:var(--
    Almacenamiento: localStorage. Sin servidor, sin cuentas.
    ========================================================================== */
 
-const APP_VERSION = '1.3';   // súbelo cada vez que cambie la app
+const APP_VERSION = '1.4';   // súbelo cada vez que cambie la app
 const APP_DATE = '2026-08-24';
+
+/* ---------- bitácora de errores, para poder diagnosticar a distancia ---------- */
+const ERRKEY = 'bitacora.errors';
+let ERRLOG = [];
+try { ERRLOG = JSON.parse(localStorage.getItem(ERRKEY) || '[]'); } catch (e) { ERRLOG = []; }
+function logError(msg, extra) {
+  ERRLOG.push({ t: new Date().toISOString().slice(0, 19).replace('T', ' '), m: String(msg).slice(0, 220), ...extra });
+  while (ERRLOG.length > 15) ERRLOG.shift();
+  try { localStorage.setItem(ERRKEY, JSON.stringify(ERRLOG)); } catch (e) { }
+}
+window.addEventListener('error', e => logError(e.message, { l: e.lineno }));
+window.addEventListener('unhandledrejection', e =>
+  logError('promesa sin atender: ' + ((e.reason && e.reason.message) || e.reason)));
 
 /* ---------- utilidades ---------- */
 const $ = (s, r = document) => r.querySelector(s);
@@ -1212,7 +1225,7 @@ function progressBlock(it, kind, id) {
       <button class="btn btn-sm" data-act="claudeStages" data-kind="${kind}" data-id="${id}">${ico('spark')}Pedirla a Claude</button>
       ${isBook
       ? `<button class="btn btn-sm" data-act="autoChapters" data-kind="${kind}" data-id="${id}">Capítulos 1…N</button>`
-      : `<button class="btn btn-sm" data-act="wikiStages" data-id="${id}">StrategyWiki</button>
+      : `<button class="btn btn-sm" data-act="wikiStages" data-id="${id}">De una wiki</button>
            <button class="btn btn-sm" data-act="rawgStages" data-id="${id}">Logros</button>`}
       <button class="btn btn-sm" data-act="addStage" data-kind="${kind}" data-id="${id}">${ico('plus')}Una</button>
     </div>
@@ -1611,27 +1624,39 @@ const API = {
     return (j.results || []).map(a => ({ name: a.name, description: a.description || '', percent: a.percent }));
   },
 
-  /* StrategyWiki — wiki de guías bajo CC BY-SA, con API abierta de MediaWiki.
-     Usamos su índice de secciones como esqueleto de misiones, citando la fuente. */
-  async wikiSearch(q) {
-    const url = `https://strategywiki.org/w/api.php?action=opensearch&search=${encodeURIComponent(q)}&limit=8&namespace=0&format=json&origin=*`;
+  /* WIKIS — casi todas las wikis de juegos (Fandom, wiki.gg, Wikipedia,
+     StrategyWiki) corren MediaWiki, que expone la misma API abierta y permite
+     peticiones desde el navegador con origin=*. Así no dependemos de un solo sitio. */
+  async wikiApiBase(origin) {
+    for (const base of [origin + '/api.php', origin + '/w/api.php']) {
+      try {
+        const r = await fetch(`${base}?action=query&meta=siteinfo&format=json&origin=*`);
+        if (!r.ok) continue;
+        const j = await r.json();
+        if (j.query && j.query.general) return { base, site: j.query.general.sitename || origin };
+      } catch (e) { }
+    }
+    throw new Error('Esa dirección no parece una wiki con API abierta.');
+  },
+
+  async wikiSearch(q, base = 'https://strategywiki.org/w/api.php') {
+    const url = `${base}?action=opensearch&search=${encodeURIComponent(q)}&limit=8&namespace=0&format=json&origin=*`;
     const r = await fetch(url);
     if (!r.ok) throw new Error('http ' + r.status);
-    const j = await r.json();
-    const [, titles = [], , urls = []] = j;
+    const [, titles = [], , urls = []] = await r.json();
     return titles.map((t, i) => ({ title: t, url: urls[i] || '' }));
   },
-  async wikiSections(title) {
-    const url = `https://strategywiki.org/w/api.php?action=parse&page=${encodeURIComponent(title)}&prop=sections&format=json&origin=*`;
+
+  /* Devuelve las dos cosas útiles de una página: su índice y las listas de adentro */
+  async wikiPage(title, base) {
+    const url = `${base}?action=parse&page=${encodeURIComponent(title)}&prop=sections|text&format=json&formatversion=2&origin=*`;
     const r = await fetch(url);
     if (!r.ok) throw new Error('http ' + r.status);
     const j = await r.json();
-    if (j.error) throw new Error(j.error.info || 'no existe esa página');
-    const skip = /^(table of contents|contents|references|external links|see also|notes|credits|gallery|trivia)$/i;
-    return (j.parse.sections || [])
-      .filter(s => +s.toclevel <= 2 && !skip.test((s.line || '').trim()))
-      .map(s => ({ text: (s.line || '').replace(/<[^>]*>/g, '').trim(), level: +s.toclevel }))
-      .filter(s => s.text.length > 1);
+    if (j.error) throw new Error(j.error.info || 'Esa página no existe en la wiki.');
+    const p = j.parse || {};
+    const html = typeof p.text === 'string' ? p.text : (p.text && p.text['*']) || '';
+    return { title: p.title || title, sections: cleanSections(p.sections || []), items: extractListItems(html) };
   },
 
   async searchCards(q) {
@@ -1660,6 +1685,47 @@ const API = {
     return { cards: out, missing };
   }
 };
+
+/* ---------- limpieza de lo que devuelven las wikis ---------- */
+const WIKI_SKIP = /^(table of contents|contents|references|external links|see also|notes|credits|gallery|trivia|navigation|sources|further reading|referencias|enlaces externos|véase también|notas|galería|curiosidades)$/i;
+
+function cleanSections(sections) {
+  return sections
+    .filter(s => +s.toclevel <= 2 && !WIKI_SKIP.test(String(s.line || '').replace(/<[^>]*>/g, '').trim()))
+    .map(s => ({ text: String(s.line || '').replace(/<[^>]*>/g, '').trim(), level: +s.toclevel }))
+    .filter(s => s.text.length > 1);
+}
+
+/* Las listas de misiones de una wiki casi siempre viven en viñetas o en la
+   primera columna de una tabla, no en el índice. Sacamos ambas. */
+function extractListItems(html) {
+  if (!html) return [];
+  let doc;
+  try { doc = new DOMParser().parseFromString(html, 'text/html'); }
+  catch (e) { return []; }
+  doc.querySelectorAll('style, script, sup, .reference, .toc, .navbox, .infobox, .mw-editsection, .noprint, .thumb, .mw-references-wrap, nav')
+    .forEach(e => e.remove());
+
+  const seen = new Set(), out = [];
+  const push = t => {
+    const text = String(t || '').replace(/\s+/g, ' ').trim().replace(/\[\d+\]$/, '').trim();
+    if (text.length < 3 || text.length > 120) return;
+    if (/^(edit|editar|más|more|\d+)$/i.test(text)) return;
+    const k = text.toLowerCase();
+    if (seen.has(k)) return;
+    seen.add(k); out.push(text);
+  };
+
+  doc.querySelectorAll('li').forEach(li => {
+    if (li.querySelector('ul, ol')) return;              // solo las hojas de la lista
+    push(li.textContent);
+  });
+  doc.querySelectorAll('table.wikitable tr, table.article-table tr').forEach(tr => {
+    const cell = tr.querySelector('td');
+    if (cell) push(cell.textContent);
+  });
+  return out.slice(0, 250);
+}
 
 function cardFromScryfall(c) {
   const face = c.card_faces && c.card_faces[0] && !c.image_uris ? c.card_faces[0] : c;
@@ -2112,33 +2178,78 @@ Formato: una línea por misión, sin numeración añadida, sin explicaciones, si
 Si no conoces ese juego con certeza, dímelo en una sola línea en vez de inventar misiones.`;
 }
 
-/* ---------- StrategyWiki ---------- */
+/* ---------- wikis (cualquiera que corra MediaWiki) ---------- */
 let wikiCache = [];
+let wikiTarget = null;
+let wikiCtx = null;          // {base, site, url, title, sections, items}
+let wikiPicked = [];         // lo que se va a importar
+
 function openWikiStages(id) {
   const it = findItem('game', id); if (!it) return;
-  sheet('Buscar en StrategyWiki', `
+  wikiTarget = id; wikiCtx = null; wikiPicked = [];
+  const q = encodeURIComponent(it.title);
+  sheet('Traer de una wiki', `
   <div class="stack">
-    <div class="banner banner-accent">${ico('info')}<div>StrategyWiki es una wiki de guías libre, bajo licencia
-      Creative Commons BY-SA. Traemos su índice como esqueleto de misiones y guardamos el enlace a la fuente.</div></div>
-    <label class="field"><span class="label">Buscar el juego</span>
+    <div class="banner banner-accent">${ico('info')}<div>Funciona con cualquier wiki que corra MediaWiki —
+      Fandom, wiki.gg, Wikipedia, StrategyWiki. Busca la página del juego, copia su enlace y pégalo aquí.
+      Guardamos la fuente porque casi todas son Creative Commons BY-SA.</div></div>
+
+    <label class="field"><span class="label">Enlace de la página</span>
+      <div class="row">
+        <input type="text" id="wurl" class="grow" placeholder="https://zelda.fandom.com/wiki/..." autocomplete="off">
+        <button class="btn" data-act="doWikiUrl">Leer</button>
+      </div></label>
+
+    <div class="linkgrid">
+      <a href="https://www.google.com/search?q=${q}+wiki+fandom" target="_blank" rel="noopener">${ico('search')}Buscar wiki</a>
+      <a href="https://www.google.com/search?q=${q}+lista+de+misiones+wiki" target="_blank" rel="noopener">${ico('search')}Lista de misiones</a>
+    </div>
+
+    <div class="divider"></div>
+    <label class="field"><span class="label">O busca directo en StrategyWiki</span>
       <div class="row"><input type="search" id="wq" class="grow" value="${esc(it.title)}" autocomplete="off">
       <button class="btn" data-act="doWikiSearch">${ico('search')}</button></div></label>
     <div id="wres"></div>
   </div>`, b => {
-    doWikiSearch();
-    const q = b.querySelector('#wq');
-    q.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); doWikiSearch(); } };
+    b.querySelector('#wurl').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); doWikiUrl(); } };
+    b.querySelector('#wq').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); doWikiSearch(); } };
   });
-  wikiTarget = id;
 }
-let wikiTarget = null;
+
+async function doWikiUrl() {
+  const raw = ($('#wurl') || {}).value?.trim();
+  const box = $('#wres'); if (!box) return;
+  if (!raw) { toast('Pega el enlace primero'); return; }
+  box.innerHTML = `<div class="dim" style="font-size:13.5px">Leyendo la wiki…</div>`;
+  try {
+    const u = new URL(raw);
+    let title = null;
+    const m = u.pathname.match(/\/wiki\/(.+)$/);
+    if (m) title = decodeURIComponent(m[1]);
+    else if (u.searchParams.get('title')) title = u.searchParams.get('title');
+    if (!title) throw new Error('No reconozco esa dirección. Debe ser el enlace de una página de wiki.');
+    title = title.split('#')[0].replace(/_/g, ' ');
+    const { base, site } = await API.wikiApiBase(u.origin);
+    const page = await API.wikiPage(title, base);
+    wikiCtx = { base, site, url: raw, title: page.title, sections: page.sections, items: page.items };
+    renderWikiPick();
+  } catch (e) {
+    box.innerHTML = `<div class="banner">${ico('info')}<div>${esc(e.message || 'No se pudo leer esa wiki.')}</div></div>`;
+  }
+}
+
 async function doWikiSearch() {
   const q = ($('#wq') || {}).value?.trim(); const box = $('#wres');
   if (!box || !q) return;
   box.innerHTML = `<div class="dim" style="font-size:13.5px">Buscando…</div>`;
   try {
     wikiCache = await API.wikiSearch(q);
-    if (!wikiCache.length) { box.innerHTML = `<div class="dim" style="font-size:13.5px">StrategyWiki no tiene guía de ese título.</div>`; return; }
+    if (!wikiCache.length) {
+      box.innerHTML = `<div class="dim" style="font-size:13.5px;line-height:1.6">
+        StrategyWiki no tiene ese título — su catálogo es chico.
+        Busca la wiki del juego con los botones de arriba y pega el enlace.</div>`;
+      return;
+    }
     box.innerHTML = `<div class="searchres">${wikiCache.map((w, i) =>
       `<button data-act="pickWiki" data-i="${i}"><span class="grow">
         <b style="display:block;font-size:14px">${esc(w.title)}</b>
@@ -2147,32 +2258,60 @@ async function doWikiSearch() {
     box.innerHTML = `<div class="banner">${ico('info')}<div>No se pudo conectar a StrategyWiki.</div></div>`;
   }
 }
+
 async function pickWiki(i) {
   const w = wikiCache[+i]; if (!w) return;
   const box = $('#wres');
-  box.innerHTML = `<div class="dim" style="font-size:13.5px">Leyendo el índice…</div>`;
+  box.innerHTML = `<div class="dim" style="font-size:13.5px">Leyendo la página…</div>`;
   try {
-    const secs = await API.wikiSections(w.title);
-    if (!secs.length) { box.innerHTML = `<div class="dim" style="font-size:13.5px">Esa página no tiene un índice aprovechable. Prueba otra.</div>`; return; }
-    wikiSections = secs;
-    box.innerHTML = `
-      <div class="card-flat" style="margin-top:12px">
-        <div class="row-between" style="margin-bottom:8px">
-          <span class="label">${secs.length} secciones</span>
-          <a href="${esc(w.url)}" target="_blank" rel="noopener" class="dim" style="font-size:11.5px">ver la guía</a>
-        </div>
-        <div style="max-height:210px;overflow-y:auto;font-size:13px;line-height:1.75">
-          ${secs.slice(0, 60).map(s => `<div style="${s.level > 1 ? 'padding-left:14px;color:var(--text-2)' : 'font-weight:600'}">${esc(s.text)}</div>`).join('')}
-        </div>
-      </div>
-      ${sectionPicker('game', 'historia')}
-      <button class="btn btn-primary btn-block" style="margin-top:12px" data-act="doWikiImport" data-url="${esc(w.url)}" data-title="${esc(w.title)}">
-        Traer estas ${secs.length} como etapas</button>`;
+    const base = 'https://strategywiki.org/w/api.php';
+    const page = await API.wikiPage(w.title, base);
+    wikiCtx = { base, site: 'StrategyWiki', url: w.url, title: page.title, sections: page.sections, items: page.items };
+    renderWikiPick();
   } catch (e) {
     box.innerHTML = `<div class="banner">${ico('info')}<div>${esc(e.message)}</div></div>`;
   }
 }
-let wikiSections = [];
+
+function renderWikiPick() {
+  const box = $('#wres'); if (!box || !wikiCtx) return;
+  const { sections, items, site, title, url } = wikiCtx;
+  const mode = S.ui.wikiMode || (items.length > sections.length ? 'items' : 'sections');
+  wikiPicked = mode === 'items' ? items : sections.map(s => s.text);
+
+  if (!sections.length && !items.length) {
+    box.innerHTML = `<div class="banner">${ico('info')}<div>Esa página no tiene ni índice ni listas aprovechables.
+      Prueba con una página tipo "lista de misiones" o el walkthrough.</div></div>`;
+    return;
+  }
+
+  box.innerHTML = `
+    <div class="card-flat" style="margin-top:12px">
+      <div class="row-between" style="margin-bottom:10px">
+        <span class="label">${esc(site)}</span>
+        <a href="${esc(url)}" target="_blank" rel="noopener" class="dim" style="font-size:11.5px">ver la página</a>
+      </div>
+      <div style="font-size:13.5px;font-weight:600;margin-bottom:10px">${esc(title)}</div>
+      <div class="tabs">
+        <button role="tab" aria-selected="${mode === 'sections'}" data-act="wikiMode" data-v="sections"
+          ${sections.length ? '' : 'disabled style="opacity:.4"'}>Índice <span class="num dim">${sections.length}</span></button>
+        <button role="tab" aria-selected="${mode === 'items'}" data-act="wikiMode" data-v="items"
+          ${items.length ? '' : 'disabled style="opacity:.4"'}>Listas <span class="num dim">${items.length}</span></button>
+      </div>
+      <div style="max-height:230px;overflow-y:auto;font-size:13px;line-height:1.7;margin-top:12px">
+        ${wikiPicked.length
+      ? wikiPicked.slice(0, 80).map(t => `<div>${esc(t)}</div>`).join('')
+      : '<div class="dim">Nada aquí.</div>'}
+        ${wikiPicked.length > 80 ? `<div class="dim">…y ${wikiPicked.length - 80} más</div>` : ''}
+      </div>
+    </div>
+    ${sectionPicker('game', 'historia')}
+    <button class="btn btn-primary btn-block" style="margin-top:12px" data-act="doWikiImport"
+      ${wikiPicked.length ? '' : 'disabled style="opacity:.5"'}>
+      Traer ${wikiPicked.length} como etapas</button>
+    <div class="dim" style="font-size:11.5px;margin-top:9px;line-height:1.5">
+      Las que no sirvan las borras de una en una después. Se guarda el enlace a la fuente.</div>`;
+}
 
 /* ---------- logros de RAWG ---------- */
 async function importAchievements(id) {
@@ -2970,6 +3109,8 @@ function viewYo() {
       Bitácora ${APP_VERSION} · ${APP_DATE}
       <button class="btn btn-ghost btn-sm" style="min-height:26px;font-size:11px;margin-left:4px"
         data-act="checkUpdate">buscar actualización</button>
+      <button class="btn btn-ghost btn-sm" style="min-height:26px;font-size:11px"
+        data-act="diagnostics">diagnóstico</button>
     </div>
   </div>`;
 }
@@ -3181,6 +3322,126 @@ function importJSON() {
     fr.readAsText(f);
   };
   inp.click();
+}
+
+/* ==========================================================================
+   DIAGNÓSTICO
+   Junta todo lo que hace falta para saber qué está pasando en el teléfono,
+   en un texto que se copia y se pega. Nunca incluye tus llaves.
+   ========================================================================== */
+const PROBES = [
+  ['Scryfall (Magic)', 'https://api.scryfall.com/cards/random?q=t:land', false],
+  ['Open Library (libros)', 'https://openlibrary.org/search.json?q=dune&limit=1&fields=title', false],
+  ['StrategyWiki', 'https://strategywiki.org/w/api.php?action=query&meta=siteinfo&format=json&origin=*', false],
+  ['Fandom (wiki de ejemplo)', 'https://zelda.fandom.com/api.php?action=query&meta=siteinfo&format=json&origin=*', false],
+  ['RAWG (juegos)', null, true]
+];
+
+async function runProbes(onEach) {
+  const out = [];
+  for (const [name, url, needsKey] of PROBES) {
+    let target = url;
+    if (needsKey) {
+      const k = (S.settings.rawgKey || '').trim();
+      if (!k) { out.push({ name, status: 'sin llave configurada' }); onEach && onEach(out); continue; }
+      target = `https://api.rawg.io/api/games?key=${encodeURIComponent(k)}&search=zelda&page_size=1`;
+    }
+    const t0 = performance.now();
+    try {
+      const r = await fetch(target);
+      out.push({ name, status: r.ok ? 'OK' : 'HTTP ' + r.status, ms: Math.round(performance.now() - t0) });
+    } catch (e) {
+      out.push({ name, status: 'bloqueado o sin red', ms: Math.round(performance.now() - t0) });
+    }
+    onEach && onEach(out);
+  }
+  return out;
+}
+
+async function buildReport(probes) {
+  const L = [];
+  const push = (k, v) => L.push(`${k}: ${v}`);
+  push('Bitácora', `${APP_VERSION} (${APP_DATE})`);
+  push('Dirección', location.origin + location.pathname);
+  push('Modo', matchMedia('(display-mode: standalone)').matches ? 'instalada' : 'en el navegador');
+  push('En línea', navigator.onLine ? 'sí' : 'no');
+  push('Pantalla', `${innerWidth}×${innerHeight}`);
+  push('Navegador', navigator.userAgent.slice(0, 140));
+  push('Idioma', navigator.language);
+
+  let sw = 'no soportado';
+  if ('serviceWorker' in navigator) {
+    try {
+      const reg = await navigator.serviceWorker.getRegistration();
+      sw = reg ? `registrado (${navigator.serviceWorker.controller ? 'controlando' : 'sin controlar'})` : 'sin registrar';
+    } catch (e) { sw = 'error: ' + e.message; }
+  }
+  push('Service worker', sw);
+  try {
+    const keys = await caches.keys();
+    push('Cachés', keys.join(', ') || 'ninguno');
+  } catch (e) { push('Cachés', 'no accesibles'); }
+
+  const raw = localStorage.getItem(KEY) || '';
+  push('Tamaño de tus datos', (new Blob([raw]).size / 1024).toFixed(1) + ' KB');
+  try {
+    const est = await navigator.storage.estimate();
+    push('Espacio', `${(est.usage / 1048576).toFixed(1)} de ${(est.quota / 1048576).toFixed(0)} MB`);
+  } catch (e) { }
+
+  const stages = everyItem().reduce((a, x) => a + (x.stages || []).length, 0);
+  push('Contenido', `${S.games.length} juegos · ${S.books.length} libros · ${S.decks.length} decks · ` +
+    `${S.matches.length} partidas · ${S.collection.length} cartas · ${S.modules.length} hobbies propios · ` +
+    `${stages} etapas · ${S.sessions.length} sesiones`);
+  push('Perfil de gusto', S.profile.done ? 'contestado' : 'sin contestar');
+  push('Llave RAWG', (S.settings.rawgKey || '').trim() ? 'configurada' : 'sin configurar');
+  push('Llave Anthropic', (S.settings.anthropicKey || '').trim() ? 'configurada' : 'sin configurar');
+  push('Apariencia', `tema ${S.settings.theme} · texto ${S.settings.fontScale}% · ${S.settings.density}` +
+    (S.settings.accent ? ` · acento ${S.settings.accent}` : ''));
+
+  L.push('');
+  L.push('Catálogos:');
+  (probes || []).forEach(p => L.push(`  ${p.name}: ${p.status}${p.ms != null ? ` (${p.ms} ms)` : ''}`));
+
+  L.push('');
+  L.push(ERRLOG.length ? 'Últimos errores:' : 'Sin errores registrados.');
+  ERRLOG.slice(-10).forEach(e => L.push(`  ${e.t} — ${e.m}${e.l ? ` (línea ${e.l})` : ''}`));
+
+  return L.join('\n');
+}
+
+function openDiagnostics() {
+  sheet('Diagnóstico', `
+  <div class="stack">
+    <div class="muted" style="font-size:13.5px;line-height:1.55">
+      Corre unas pruebas y arma un reporte que puedes copiar y pegarme.
+      No incluye tus llaves ni el contenido de tus notas.</div>
+    <button class="btn btn-primary btn-block" data-act="runDiag">Correr las pruebas</button>
+    <div id="diagOut"></div>
+  </div>`);
+}
+
+async function runDiag() {
+  const box = $('#diagOut'); if (!box) return;
+  const paint = probes => {
+    box.innerHTML = `<div class="card-flat" style="margin-top:12px">
+      ${PROBES.map(([n]) => {
+      const p = (probes || []).find(x => x.name === n);
+      return `<div class="list-row" style="padding:8px 0">
+          <span class="grow" style="font-size:13px">${esc(n)}</span>
+          <span class="num" style="font-size:11.5px;color:${!p ? 'var(--text-3)' : p.status === 'OK' ? 'var(--good)' : 'var(--crit)'}">
+            ${p ? esc(p.status) : 'esperando…'}</span></div>`;
+    }).join('')}
+    </div>`;
+  };
+  paint([]);
+  const probes = await runProbes(paint);
+  const text = await buildReport(probes);
+  box.innerHTML += `
+    <label class="field" style="margin-top:14px"><span class="label">Reporte</span>
+      <textarea id="diagText" readonly style="min-height:200px;font-family:var(--font-mono);font-size:11.5px">${esc(text)}</textarea></label>
+    <button class="btn btn-primary btn-block" style="margin-top:10px" data-act="copyDiag">Copiar el reporte</button>
+    ${ERRLOG.length ? `<button class="btn btn-block btn-sm" style="margin-top:8px" data-act="clearErrors">Borrar los errores registrados</button>` : ''}`;
 }
 
 /* ==========================================================================
@@ -3533,20 +3794,23 @@ function handleAction(act, d, el) {
       break;
     }
     case 'wikiStages': openWikiStages(d.id); break;
+    case 'doWikiUrl': doWikiUrl(); break;
     case 'doWikiSearch': doWikiSearch(); break;
     case 'pickWiki': pickWiki(d.i); break;
+    case 'wikiMode': S.ui.wikiMode = d.v; save(); renderWikiPick(); break;
     case 'doWikiImport': {
+      if (!wikiCtx || !wikiPicked.length) break;
       const sec = ($('#stSection') || {}).value || 'historia';
-      const n = addStages('game', wikiTarget, wikiSections.map(s => s.text), sec);
+      const n = addStages('game', wikiTarget, wikiPicked, sec);
       const x = findItem('game', wikiTarget);
       if (x) {
         x.sources = x.sources || [];
-        if (!x.sources.some(s => s.url === d.url))
-          x.sources.push({ name: 'StrategyWiki: ' + d.title, url: d.url, license: 'CC BY-SA 3.0' });
+        if (!x.sources.some(s => s.url === wikiCtx.url))
+          x.sources.push({ name: `${wikiCtx.site}: ${wikiCtx.title}`, url: wikiCtx.url, license: 'CC BY-SA' });
         save(true);
       }
-      closeSheet(); openItem('game', wikiTarget);
-      toast(`${n} etapas desde StrategyWiki`);
+      closeSheet(); reopenItem('game', wikiTarget);
+      toast(n ? `${n} etapas desde ${wikiCtx.site}` : 'Ya las tenías todas');
       break;
     }
     case 'rawgStages': importAchievements(d.id); break;
@@ -3714,8 +3978,18 @@ function handleAction(act, d, el) {
     }
     case 'setSetting': break; // change
 
-    /* actualización */
+    /* actualización y diagnóstico */
     case 'checkUpdate': checkUpdate(); break;
+    case 'diagnostics': openDiagnostics(); break;
+    case 'runDiag': runDiag(); break;
+    case 'copyDiag': {
+      const t = ($('#diagText') || {}).value || '';
+      navigator.clipboard?.writeText(t)
+        .then(() => toast('Copiado — pégamelo en el chat'))
+        .catch(() => { const ta = $('#diagText'); ta.select(); toast('Selecciónalo y cópialo'); });
+      break;
+    }
+    case 'clearErrors': ERRLOG = []; try { localStorage.removeItem(ERRKEY); } catch (e) { } runDiag(); toast('Errores borrados'); break;
 
     /* goodreads */
     case 'goodreads': openGoodreads(); break;

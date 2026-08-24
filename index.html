@@ -1,0 +1,2927 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bitácora</title>
+<meta name="description" content="Rastreador personal de videojuegos, libros y Magic.">
+<meta name="theme-color" content="#0F1418" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F2F4F5" media="(prefers-color-scheme: light)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bitácora">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="icon-192.png">
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --bg:#F2F4F5;
+  --surface:#FFFFFF;
+  --surface-2:#E9EDEF;
+  --raised:#FFFFFF;
+  --border:#D8DFE2;
+  --border-soft:#E6EBED;
+  --text:#141A1E;
+  --text-2:#4A575F;
+  --text-3:#7C8B94;
+
+  --accent:#2F8A72;
+  --accent-soft:#DCEDE7;
+  --accent-text:#1F6B57;
+  --on-accent:#FFFFFF;
+
+  --games:#B0543C;
+  --games-soft:#F6E4DE;
+  --books:#9A7118;
+  --books-soft:#F7EDD6;
+  --magic:#525CA8;
+  --magic-soft:#E3E5F5;
+
+  --good:#2F8A72;
+  --warn:#9A7118;
+  --crit:#B0543C;
+
+  --mtg-w:#E8DFC8; --mtg-u:#6FA8DC; --mtg-b:#6B6570; --mtg-r:#D3705E; --mtg-g:#6DA678; --mtg-c:#A9B2B8;
+
+  --r-sm:8px; --r:13px; --r-lg:20px;
+  --shadow:0 1px 2px rgba(20,26,30,.06), 0 6px 20px -8px rgba(20,26,30,.14);
+  --sp:16px;
+
+  --font-display:"Bricolage Grotesque","IBM Plex Sans",system-ui,sans-serif;
+  --font-body:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1418;
+    --surface:#161D22;
+    --surface-2:#1D262C;
+    --raised:#1A2228;
+    --border:#2A363E;
+    --border-soft:#212B32;
+    --text:#E4EAEE;
+    --text-2:#9FB0BA;
+    --text-3:#6C7D88;
+
+    --accent:#5FAE97;
+    --accent-soft:#17332C;
+    --accent-text:#7FC5B0;
+    --on-accent:#08110E;
+
+    --games:#C86F58;
+    --games-soft:#301D18;
+    --books:#D2A03F;
+    --books-soft:#2E2513;
+    --magic:#7E86C9;
+    --magic-soft:#1E2138;
+
+    --good:#5FAE97;
+    --warn:#D2A03F;
+    --crit:#C86F58;
+
+    --mtg-w:#D9CFB4; --mtg-u:#5B9BD5; --mtg-b:#8A8291; --mtg-r:#C8604D; --mtg-g:#63A071; --mtg-c:#8C979E;
+
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -10px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1418;
+  --surface:#161D22;
+  --surface-2:#1D262C;
+  --raised:#1A2228;
+  --border:#2A363E;
+  --border-soft:#212B32;
+  --text:#E4EAEE;
+  --text-2:#9FB0BA;
+  --text-3:#6C7D88;
+
+  --accent:#5FAE97;
+  --accent-soft:#17332C;
+  --accent-text:#7FC5B0;
+  --on-accent:#08110E;
+
+  --games:#C86F58;
+  --games-soft:#301D18;
+  --books:#D2A03F;
+  --books-soft:#2E2513;
+  --magic:#7E86C9;
+  --magic-soft:#1E2138;
+
+  --good:#5FAE97;
+  --warn:#D2A03F;
+  --crit:#C86F58;
+
+  --mtg-w:#D9CFB4; --mtg-u:#5B9BD5; --mtg-b:#8A8291; --mtg-r:#C8604D; --mtg-g:#63A071; --mtg-c:#8C979E;
+
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -10px rgba(0,0,0,.6);
+}
+
+/* ============ BASE ============ */
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:var(--font-body); font-size:15px; line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  padding-bottom:calc(74px + env(safe-area-inset-bottom));
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:none;padding:0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+@media (prefers-reduced-motion: reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+
+.wrap{max-width:600px;margin:0 auto;padding:0 var(--sp)}
+
+/* ============ HEADER ============ */
+.topbar{
+  position:sticky;top:0;z-index:40;background:var(--bg);
+  border-bottom:1px solid var(--border-soft);
+  padding-top:env(safe-area-inset-top);
+}
+.topbar-in{display:flex;align-items:center;gap:12px;min-height:56px}
+.brand{font-family:var(--font-display);font-weight:700;font-size:20px;letter-spacing:-.02em;flex:1}
+.brand span{color:var(--accent)}
+.iconbtn{
+  width:38px;height:38px;border-radius:10px;display:grid;place-items:center;
+  border:1px solid var(--border);background:var(--surface);color:var(--text-2);
+  transition:background .15s,color .15s;
+}
+.iconbtn:hover{background:var(--surface-2);color:var(--text)}
+.iconbtn svg{width:18px;height:18px}
+
+/* ============ TYPE ============ */
+h1,h2,h3{font-family:var(--font-display);letter-spacing:-.02em;text-wrap:balance;margin:0}
+h1{font-size:26px;font-weight:700;line-height:1.15}
+h2{font-size:19px;font-weight:700}
+h3{font-size:16px;font-weight:600}
+.eyebrow{
+  font-family:var(--font-mono);font-size:10.5px;font-weight:500;
+  text-transform:uppercase;letter-spacing:.13em;color:var(--text-3);
+}
+.muted{color:var(--text-2)}
+.dim{color:var(--text-3)}
+.num{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ============ LAYOUT PRIMITIVES ============ */
+.stack{display:flex;flex-direction:column;gap:12px}
+.stack-lg{display:flex;flex-direction:column;gap:22px}
+.row{display:flex;align-items:center;gap:10px}
+.row-between{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.grow{flex:1;min-width:0}
+.section{padding:20px 0 4px}
+.section-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px}
+
+/* ============ CARD ============ */
+.card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  padding:14px;position:relative;overflow:hidden;
+}
+.card-flat{background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--r);padding:14px}
+.stripe::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--tint,var(--accent))}
+.stripe{padding-left:17px}
+
+/* ============ BUTTONS ============ */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  min-height:44px;padding:0 18px;border-radius:11px;font-weight:600;font-size:14.5px;
+  background:var(--surface);border:1px solid var(--border);color:var(--text);
+  transition:transform .12s,background .15s,border-color .15s;
+}
+.btn:active{transform:scale(.97)}
+.btn:hover{background:var(--surface-2)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn-primary:hover{background:var(--accent);filter:brightness(1.07)}
+.btn-ghost{border-color:transparent;background:transparent;color:var(--text-2)}
+.btn-ghost:hover{background:var(--surface-2);color:var(--text)}
+.btn-sm{min-height:34px;padding:0 12px;font-size:13px;border-radius:9px}
+.btn-block{width:100%}
+.btn-danger{color:var(--crit);border-color:var(--border)}
+.btn svg{width:17px;height:17px;flex:none}
+
+/* the one big call to action */
+.hero-btn{
+  width:100%;min-height:76px;border-radius:var(--r-lg);
+  background:var(--accent);color:var(--on-accent);border:none;
+  display:flex;align-items:center;gap:14px;padding:0 20px;text-align:left;
+  font-family:var(--font-display);font-size:20px;font-weight:700;letter-spacing:-.02em;
+  transition:transform .15s, filter .15s;
+}
+.hero-btn:hover{filter:brightness(1.06)}
+.hero-btn:active{transform:scale(.985)}
+.hero-btn small{display:block;font-family:var(--font-body);font-size:12.5px;font-weight:500;opacity:.78;letter-spacing:0}
+.hero-btn .dice{width:30px;height:30px;flex:none;opacity:.9}
+
+/* ============ CHIPS ============ */
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;
+  min-height:32px;padding:0 11px;border-radius:999px;font-size:12.5px;font-weight:500;
+  background:var(--surface-2);border:1px solid transparent;color:var(--text-2);
+  transition:background .15s,color .15s,border-color .15s;
+}
+button.chip:hover{border-color:var(--border);color:var(--text)}
+.chip.on{background:var(--accent-soft);color:var(--accent-text);border-color:var(--accent)}
+.chip-xs{min-height:24px;padding:0 9px;font-size:11px;font-family:var(--font-mono);letter-spacing:.02em}
+.tint-games{--tint:var(--games)} .tint-books{--tint:var(--books)} .tint-magic{--tint:var(--magic)}
+.chip-games{background:var(--games-soft);color:var(--games)}
+.chip-books{background:var(--books-soft);color:var(--books)}
+.chip-magic{background:var(--magic-soft);color:var(--magic)}
+
+/* status pills */
+.pill{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:10.5px;
+  font-weight:500;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:6px;
+  background:var(--surface-2);color:var(--text-3)}
+.pill .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.pill-active{background:var(--accent-soft);color:var(--accent-text)}
+.pill-paused{background:var(--books-soft);color:var(--books)}
+.pill-done{background:var(--surface-2);color:var(--text-3)}
+.pill-dropped{background:var(--surface-2);color:var(--text-3);opacity:.75}
+
+/* ============ FORM ============ */
+label.field{display:flex;flex-direction:column;gap:6px}
+.label{font-family:var(--font-mono);font-size:10.5px;font-weight:500;text-transform:uppercase;
+  letter-spacing:.12em;color:var(--text-3)}
+input[type=text],input[type=number],input[type=date],input[type=search],select,textarea{
+  width:100%;min-height:44px;padding:10px 13px;border-radius:11px;
+  background:var(--bg);border:1px solid var(--border);color:var(--text);
+  transition:border-color .15s,background .15s;
+}
+:root[data-theme="dark"] input,:root[data-theme="dark"] select,:root[data-theme="dark"] textarea{background:var(--bg)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);background:var(--surface)}
+textarea{min-height:88px;resize:vertical;line-height:1.5}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237C8B94' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;background-size:16px;padding-right:38px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:26px;min-height:26px;
+  padding:0;border:none;background:transparent}
+input[type=range]::-webkit-slider-runnable-track{height:7px;border-radius:999px;background:var(--surface-2)}
+input[type=range]::-moz-range-track{height:7px;border-radius:999px;background:var(--surface-2)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;
+  background:var(--accent);border:3px solid var(--surface);margin-top:-7.5px;box-shadow:var(--shadow)}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--accent);
+  border:3px solid var(--surface);box-shadow:var(--shadow)}
+input[type=checkbox]{accent-color:var(--accent)}
+
+/* ============ PROGRESS ============ */
+.bar{height:7px;border-radius:999px;background:var(--surface-2);overflow:hidden}
+.bar>i{display:block;height:100%;border-radius:999px;background:var(--tint,var(--accent));transition:width .35s ease}
+
+/* score ring */
+.ring{position:relative;width:44px;height:44px;flex:none}
+.ring svg{transform:rotate(-90deg);width:44px;height:44px}
+.ring .track{stroke:var(--surface-2)}
+.ring .val{stroke:var(--tint,var(--accent));stroke-linecap:round;transition:stroke-dashoffset .6s ease}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--font-mono);
+  font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums}
+
+/* ============ COVER ============ */
+.cover{width:52px;height:70px;border-radius:7px;object-fit:cover;flex:none;background:var(--surface-2);
+  border:1px solid var(--border-soft)}
+.cover-ph{width:52px;height:70px;border-radius:7px;flex:none;background:var(--surface-2);
+  display:grid;place-items:center;color:var(--text-3);border:1px solid var(--border-soft)}
+.cover-ph svg{width:20px;height:20px}
+
+/* ============ NAV ============ */
+.nav{
+  position:fixed;left:0;right:0;bottom:0;z-index:50;
+  background:color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-top:1px solid var(--border);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.nav-in{max-width:600px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
+.nav button{
+  display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 2px 8px;
+  color:var(--text-3);font-size:10.5px;font-weight:500;transition:color .15s;
+}
+.nav button svg{width:21px;height:21px}
+.nav button[aria-current="page"]{color:var(--accent)}
+.nav button:hover{color:var(--text-2)}
+
+/* ============ SHEET / MODAL ============ */
+.scrim{position:fixed;inset:0;z-index:60;background:rgba(8,12,15,.55);backdrop-filter:blur(2px);
+  display:flex;align-items:flex-end;justify-content:center;animation:fade .18s ease}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes rise{from{transform:translateY(18px);opacity:.4}to{transform:translateY(0);opacity:1}}
+.sheet{
+  width:100%;max-width:600px;max-height:92vh;overflow-y:auto;overscroll-behavior:contain;
+  background:var(--surface);border:1px solid var(--border);border-bottom:none;
+  border-radius:var(--r-lg) var(--r-lg) 0 0;padding:8px 16px calc(24px + env(safe-area-inset-bottom));
+  animation:rise .22s cubic-bezier(.2,.8,.3,1);
+}
+.sheet-grab{width:38px;height:4px;border-radius:999px;background:var(--border);margin:6px auto 12px}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+
+/* ============ MISC ============ */
+.empty{text-align:center;padding:34px 18px;color:var(--text-3)}
+.empty svg{width:34px;height:34px;margin-bottom:10px;opacity:.5}
+.empty p{margin:0 0 14px;font-size:14px;line-height:1.55}
+.divider{height:1px;background:var(--border-soft);margin:4px 0}
+.banner{display:flex;gap:10px;padding:12px 14px;border-radius:var(--r);font-size:13px;line-height:1.5;
+  background:var(--books-soft);color:var(--books);border:1px solid transparent}
+.banner svg{width:17px;height:17px;flex:none;margin-top:2px}
+.banner-accent{background:var(--accent-soft);color:var(--accent-text)}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(88px + env(safe-area-inset-bottom));
+  z-index:70;background:var(--text);color:var(--bg);padding:11px 17px;border-radius:11px;
+  font-size:13.5px;font-weight:500;box-shadow:var(--shadow);animation:rise .2s ease;max-width:88vw}
+
+/* heatmap */
+.heat{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,1fr);gap:3px;overflow-x:auto;padding-bottom:4px}
+.heat i{width:11px;height:11px;border-radius:2.5px;background:var(--surface-2);display:block}
+.heat i[data-l="1"]{background:color-mix(in srgb,var(--accent) 28%,var(--surface-2))}
+.heat i[data-l="2"]{background:color-mix(in srgb,var(--accent) 52%,var(--surface-2))}
+.heat i[data-l="3"]{background:color-mix(in srgb,var(--accent) 76%,var(--surface-2))}
+.heat i[data-l="4"]{background:var(--accent)}
+
+/* mana curve */
+.curve{display:flex;align-items:flex-end;gap:5px;height:78px}
+.curve>div{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;height:100%;justify-content:flex-end}
+.curve .cb{width:100%;border-radius:4px 4px 0 0;background:var(--magic);min-height:2px;transition:height .4s ease}
+.curve .cl{font-family:var(--font-mono);font-size:10px;color:var(--text-3)}
+
+/* pie / color bar */
+.colorbar{display:flex;height:10px;border-radius:999px;overflow:hidden;background:var(--surface-2)}
+.colorbar>i{display:block;height:100%}
+
+.list-row{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--border-soft)}
+.list-row:last-child{border-bottom:none}
+
+table.data{width:100%;border-collapse:collapse;font-size:13.5px}
+table.data th{text-align:left;font-family:var(--font-mono);font-size:10px;text-transform:uppercase;
+  letter-spacing:.1em;color:var(--text-3);font-weight:500;padding:0 8px 7px 0}
+table.data td{padding:8px 8px 8px 0;border-top:1px solid var(--border-soft);vertical-align:middle}
+.scrollx{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.data tr.is-proxy td:nth-child(2) a{color:var(--magic)}
+table.data tr.is-proxy td:nth-child(2)::after{content:"proxy";font-family:var(--font-mono);font-size:9.5px;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--magic);background:var(--magic-soft);
+  padding:2px 6px;border-radius:5px;margin-left:7px;display:inline-block;vertical-align:2px}
+
+.timer-live{display:inline-flex;align-items:center;gap:6px;color:var(--accent);font-family:var(--font-mono);
+  font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.timer-live .blip{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+
+.tabs{display:flex;gap:4px;background:var(--surface-2);padding:3px;border-radius:11px}
+.tabs button{flex:1;min-height:36px;border-radius:9px;font-size:13px;font-weight:600;color:var(--text-3);
+  transition:background .15s,color .15s}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+
+.stat{display:flex;flex-direction:column;gap:2px}
+.stat b{font-family:var(--font-mono);font-size:21px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.stat span{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-3)}
+.statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+
+.result-card{animation:settle .4s cubic-bezier(.2,.9,.3,1)}
+@keyframes settle{0%{transform:translateY(10px) scale(.97);opacity:0}100%{transform:none;opacity:1}}
+
+.searchres{max-height:300px;overflow-y:auto;margin:0 -4px}
+.searchres button{display:flex;gap:11px;width:100%;text-align:left;padding:9px 4px;border-radius:9px;
+  border-bottom:1px solid var(--border-soft)}
+.searchres button:hover{background:var(--surface-2)}
+
+.hidden{display:none !important}
+</style>
+
+<div class="topbar">
+  <div class="wrap topbar-in">
+    <div class="brand">Bit<span>á</span>cora</div>
+    <button class="iconbtn" id="themeBtn" title="Cambiar tema" aria-label="Cambiar tema">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+  </div>
+</div>
+
+<main class="wrap" id="view"></main>
+
+<nav class="nav">
+  <div class="nav-in" id="nav"></div>
+</nav>
+
+<div id="sheetHost"></div>
+<div id="toastHost"></div>
+
+<script>
+/* ==========================================================================
+   BITÁCORA — rastreador personal de hobbies
+   Almacenamiento: localStorage. Sin servidor, sin cuentas.
+   ========================================================================== */
+
+/* ---------- utilidades ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+const todayKey = (d = new Date()) => {
+  const t = new Date(d); t.setMinutes(t.getMinutes() - t.getTimezoneOffset());
+  return t.toISOString().slice(0, 10);
+};
+const daysBetween = (a, b) => Math.round((new Date(b) - new Date(a)) / 86400000);
+const daysSince = iso => iso ? daysBetween(iso.slice(0, 10), todayKey()) : 9999;
+
+function fmtMin(m) {
+  m = Math.round(m || 0);
+  if (m < 60) return m + ' min';
+  const h = Math.floor(m / 60), r = m % 60;
+  return r ? `${h} h ${r} min` : `${h} h`;
+}
+function fmtHrs(m) { return ((m || 0) / 60).toFixed((m || 0) < 600 ? 1 : 0) + ' h'; }
+function fmtMoney(n) { return '$' + (n || 0).toFixed(2); }
+function relDate(iso) {
+  if (!iso) return 'nunca';
+  const d = daysSince(iso);
+  if (d <= 0) return 'hoy';
+  if (d === 1) return 'ayer';
+  if (d < 7) return `hace ${d} días`;
+  if (d < 30) return `hace ${Math.floor(d / 7)} sem`;
+  if (d < 365) return `hace ${Math.floor(d / 30)} meses`;
+  return `hace ${Math.floor(d / 365)} años`;
+}
+
+/* ---------- iconos ---------- */
+const I = {
+  home: '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5"/>',
+  game: '<rect x="2" y="7" width="20" height="11" rx="4"/><path d="M7 11v3M5.5 12.5h3M15.5 12.5h.01M18 11h.01"/>',
+  book: '<path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 18.5A2.5 2.5 0 0 1 6.5 16H20"/>',
+  magic: '<path d="M12 2.5 14.4 9l6.6.3-5.2 4.1 1.8 6.4L12 16.2 6.4 19.8l1.8-6.4L3 9.3 9.6 9z"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5a7.7 7.7 0 0 1 15 0"/>',
+  spark: '<path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="3.2"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  x: '<path d="M18 6 6 18M6 6l12 12"/>',
+  play: '<path d="M6 4.5 19 12 6 19.5z"/>',
+  pause: '<path d="M9 5v14M15 5v14"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  chev: '<path d="m9 6 6 6-6 6"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.6v.4"/>',
+  check: '<path d="m4.5 12.5 5 5 10-11"/>',
+  trash: '<path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/>',
+  edit: '<path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17z"/>',
+  down: '<path d="M12 4v12M6.5 11l5.5 5 5.5-5M4 20h16"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5.2l3.2 2"/>',
+  leaf: '<path d="M20 4C10 4 4 9 4 16c0 2 .7 3.4.7 3.4S9 12 18 9c0 0-6 3.5-8.5 10.5 0 0 8.5 1.5 10.5-16z"/>',
+  send: '<path d="M4.5 12 20 4.5 15 20l-3.5-6z"/><path d="M11.5 14 20 4.5"/>',
+  link: '<path d="M10 13.5a4 4 0 0 0 5.7 0l2.8-2.8a4 4 0 0 0-5.7-5.7L11.5 6.4"/><path d="M14 10.5a4 4 0 0 0-5.7 0l-2.8 2.8a4 4 0 1 0 5.7 5.7l1.2-1.2"/>'
+};
+const ico = (n, w = 1.9) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${I[n] || ''}</svg>`;
+const icoFill = n => `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none">${I[n] || ''}</svg>`;
+
+/* ---------- estado ---------- */
+const KEY = 'bitacora.v1';
+const BLANK = {
+  version: 1,
+  ui: { route: 'hoy', gameTab: 'activos', magicTab: 'decks' },
+  settings: {
+    showStreaks: true, weeklyGoalMin: 300, calmLimit: 3,
+    staleDays: 14, rawgKey: '', anthropicKey: '', model: 'claude-haiku-4-5-20251001',
+    theme: 'auto'
+  },
+  profile: { done: false, answers: {}, favGames: [], favSagas: [], dealbreakers: [] },
+  games: [], books: [], decks: [], matches: [], collection: [],
+  sessions: [],           // {id,kind,refId,title,min,date}
+  assistant: []           // {role,content}
+};
+
+let S = load();
+function load() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return structuredClone(BLANK);
+    const p = JSON.parse(raw);
+    return deepDefault(p, structuredClone(BLANK));
+  } catch (e) { console.warn('estado ilegible, empezando limpio', e); return structuredClone(BLANK); }
+}
+function deepDefault(obj, def) {
+  if (obj === null || obj === undefined) return def;
+  if (Array.isArray(def)) return Array.isArray(obj) ? obj : def;
+  if (typeof def === 'object') {
+    const out = { ...def };
+    for (const k in def) out[k] = deepDefault(obj[k], def[k]);
+    for (const k in obj) if (!(k in def)) out[k] = obj[k];
+    return out;
+  }
+  return obj === undefined ? def : obj;
+}
+let saveTimer = null;
+function save(immediate) {
+  clearTimeout(saveTimer);
+  const doIt = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast('No se pudo guardar: espacio lleno'); } };
+  immediate ? doIt() : saveTimer = setTimeout(doIt, 250);
+}
+
+/* ---------- tema ---------- */
+function applyTheme() {
+  const t = S.settings.theme;
+  if (t === 'auto') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', t);
+}
+$('#themeBtn').onclick = () => {
+  const order = ['auto', 'light', 'dark'];
+  S.settings.theme = order[(order.indexOf(S.settings.theme) + 1) % 3];
+  applyTheme(); save();
+  toast({ auto: 'Tema: automático', light: 'Tema: claro', dark: 'Tema: oscuro' }[S.settings.theme]);
+};
+applyTheme();
+
+/* ---------- toast ---------- */
+let toastT;
+function toast(msg) {
+  const host = $('#toastHost');
+  host.innerHTML = `<div class="toast">${esc(msg)}</div>`;
+  clearTimeout(toastT);
+  toastT = setTimeout(() => host.innerHTML = '', 2600);
+}
+
+/* ---------- hoja modal ---------- */
+let sheetOnClose = null;
+function sheet(title, bodyHTML, onMount) {
+  const host = $('#sheetHost');
+  host.innerHTML = `<div class="scrim" data-scrim>
+    <div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+      <div class="sheet-grab"></div>
+      <div class="sheet-head"><h2>${esc(title)}</h2>
+        <button class="iconbtn" data-close aria-label="Cerrar">${ico('x')}</button></div>
+      <div id="sheetBody">${bodyHTML}</div>
+    </div></div>`;
+  document.body.style.overflow = 'hidden';
+  host.querySelector('[data-scrim]').addEventListener('click', e => { if (e.target.dataset.scrim !== undefined) closeSheet(); });
+  host.querySelector('[data-close]').onclick = closeSheet;
+  onMount && onMount($('#sheetBody'));
+}
+function closeSheet() {
+  $('#sheetHost').innerHTML = '';
+  document.body.style.overflow = '';
+  if (sheetOnClose) { const f = sheetOnClose; sheetOnClose = null; f(); }
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+
+/* ---------- registro de sesiones ---------- */
+function logSession(kind, refId, title, min) {
+  if (min <= 0) return;
+  S.sessions.push({ id: uid(), kind, refId, title, min: Math.round(min), date: todayKey() });
+  const item = findItem(kind, refId);
+  if (item) { item.minutes = (item.minutes || 0) + Math.round(min); item.lastTouched = todayKey(); }
+  save();
+}
+function findItem(kind, id) {
+  const list = kind === 'game' ? S.games : kind === 'book' ? S.books : null;
+  return list ? list.find(x => x.id === id) : null;
+}
+function minutesOn(dateKey) { return S.sessions.filter(s => s.date === dateKey).reduce((a, s) => a + s.min, 0); }
+
+/* ---------- cronómetro ---------- */
+function startTimer(kind, id) {
+  const it = findItem(kind, id); if (!it) return;
+  it.timerStart = Date.now(); save(); render();
+}
+function stopTimer(kind, id) {
+  const it = findItem(kind, id); if (!it || !it.timerStart) return;
+  const min = (Date.now() - it.timerStart) / 60000;
+  it.timerStart = null;
+  if (min >= 0.5) { logSession(kind, id, it.title, min); toast(`+${fmtMin(min)} registrados`); }
+  else toast('Sesión muy corta, no se registró');
+  save(); render();
+}
+setInterval(() => { if ($('[data-tick]')) render(); }, 30000);
+
+/* ---------- racha ---------- */
+function streak() {
+  let n = 0; const d = new Date();
+  if (minutesOn(todayKey(d)) === 0) d.setDate(d.getDate() - 1);
+  for (;;) { if (minutesOn(todayKey(d)) > 0) { n++; d.setDate(d.getDate() - 1); } else break; }
+  return n;
+}
+function weekMinutes() {
+  const d = new Date(); const out = [];
+  for (let i = 0; i < 7; i++) { out.push(todayKey(d)); d.setDate(d.getDate() - 1); }
+  return out.reduce((a, k) => a + minutesOn(k), 0);
+}
+
+/* ---------- navegación ---------- */
+const ROUTES = [
+  { id: 'hoy', label: 'Hoy', icon: 'home' },
+  { id: 'juegos', label: 'Juegos', icon: 'game' },
+  { id: 'libros', label: 'Libros', icon: 'book' },
+  { id: 'magic', label: 'Magic', icon: 'magic' },
+  { id: 'yo', label: 'Yo', icon: 'user' }
+];
+function go(r) { S.ui.route = r; save(); render(); window.scrollTo({ top: 0 }); }
+function renderNav() {
+  $('#nav').innerHTML = ROUTES.map(r =>
+    `<button data-go="${r.id}" ${S.ui.route === r.id ? 'aria-current="page"' : ''}>
+      ${ico(r.icon)}<span>${r.label}</span></button>`).join('');
+}
+
+/* ---------- delegación global de eventos ---------- */
+document.addEventListener('click', e => {
+  const g = e.target.closest('[data-go]'); if (g) { go(g.dataset.go); return; }
+  const a = e.target.closest('[data-act]');
+  // Los campos de formulario se manejan en 'input'/'change': si aquí hiciéramos
+  // preventDefault, una casilla nunca llegaría a marcarse.
+  if (a && !/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName)) {
+    e.preventDefault();
+    handleAction(a.dataset.act, a.dataset, a);
+  }
+});
+
+/* ---------- render principal ---------- */
+function render() {
+  renderNav();
+  const v = $('#view');
+  const fn = { hoy: viewHoy, juegos: viewJuegos, libros: viewLibros, magic: viewMagic, yo: viewYo }[S.ui.route] || viewHoy;
+  v.innerHTML = fn();
+  const post = { juegos: null, magic: null }[S.ui.route];
+  if (S.ui.route === 'magic') afterMagic();
+  if (S.ui.route === 'yo') afterYo();
+}
+
+/* ==========================================================================
+   TAXONOMÍA — el vocabulario compartido entre tu perfil y cada juego/libro.
+   Cada entrada mapea a las etiquetas que devuelve el catálogo (RAWG),
+   para que la compatibilidad funcione igual si el juego lo agregaste a mano.
+   ========================================================================== */
+const TAX = {
+  generos: {
+    accion: { label: 'Acción', m: ['action'] },
+    aventura: { label: 'Aventura', m: ['adventure'] },
+    rpg: { label: 'RPG', m: ['rpg', 'role-playing-games-rpg'] },
+    estrategia: { label: 'Estrategia', m: ['strategy'] },
+    shooter: { label: 'Shooter', m: ['shooter'] },
+    plataformas: { label: 'Plataformas', m: ['platformer'] },
+    puzzle: { label: 'Puzzle', m: ['puzzle'] },
+    simulacion: { label: 'Simulación', m: ['simulation'] },
+    indie: { label: 'Indie', m: ['indie'] },
+    deportes: { label: 'Deportes', m: ['sports', 'racing'] },
+    pelea: { label: 'Pelea', m: ['fighting'] },
+    cartas: { label: 'Cartas / tablero', m: ['card', 'board-games'] }
+  },
+  mecanicas: {
+    exploracion: { label: 'Exploración', m: ['exploration', 'open-world', 'sandbox'] },
+    porturnos: { label: 'Por turnos', m: ['turn-based-combat', 'turn-based-strategy', 'turn-based', 'tactical-rpg'] },
+    sigilo: { label: 'Sigilo', m: ['stealth'] },
+    crafteo: { label: 'Crafteo', m: ['crafting', 'survival'] },
+    puzzles: { label: 'Acertijos', m: ['puzzle', 'point-and-click'] },
+    metroidvania: { label: 'Metroidvania', m: ['metroidvania'] },
+    roguelike: { label: 'Roguelike', m: ['roguelike', 'rogue-like', 'roguelite', 'permadeath'] },
+    construccion: { label: 'Construcción', m: ['building', 'base-building', 'city-builder'] },
+    vidatranquila: { label: 'Vida tranquila', m: ['farming', 'farming-sim', 'life-sim', 'relaxing', 'cozy'] },
+    coleccionar: { label: 'Coleccionar', m: ['collectathon', 'monster-collecting', 'creature-collector'] },
+    decisiones: { label: 'Decisiones', m: ['choices-matter', 'multiple-endings', 'story-rich', 'narrative'] },
+    cooperativo: { label: 'Cooperativo', m: ['co-op', 'local-co-op', 'online-co-op', 'local-multiplayer'] },
+    dificilduro: { label: 'Reto duro', m: ['souls-like', 'difficult', 'bullet-hell'] }
+  },
+  tonos: {
+    acogedor: { label: 'Acogedor', m: ['cozy', 'cute', 'relaxing', 'wholesome', 'colorful', 'family-friendly'] },
+    oscuro: { label: 'Oscuro', m: ['dark', 'horror', 'post-apocalyptic', 'gore', 'psychological-horror'] },
+    epico: { label: 'Épico', m: ['fantasy', 'epic', 'mythology', 'medieval'] },
+    humor: { label: 'Con humor', m: ['funny', 'comedy', 'memes'] },
+    melancolico: { label: 'Melancólico', m: ['emotional', 'atmospheric', 'sad', 'walking-simulator'] },
+    competitivo: { label: 'Competitivo', m: ['competitive', 'pvp', 'esports', 'battle-royale'] },
+    retro: { label: 'Retro / pixel', m: ['pixel-graphics', 'retro', '2d', 'arcade'] },
+    scifi: { label: 'Ciencia ficción', m: ['sci-fi', 'space', 'cyberpunk'] }
+  },
+  vetos: {
+    horror: { label: 'Horror', m: ['horror', 'psychological-horror', 'survival-horror'] },
+    gore: { label: 'Gore', m: ['gore', 'violent', 'blood'] },
+    pvp: { label: 'PvP competitivo', m: ['pvp', 'competitive', 'battle-royale', 'esports'] },
+    gacha: { label: 'Gacha / microtransacciones', m: ['gacha', 'free-to-play', 'in-app-purchases'] },
+    prisa: { label: 'Contrarreloj', m: ['time-management', 'time-attack'] },
+    permadeath: { label: 'Permadeath', m: ['permadeath', 'roguelike', 'rogue-like'] },
+    online: { label: 'Obligatoriamente online', m: ['massively-multiplayer', 'mmorpg', 'online-multiplayer'] }
+  }
+};
+/* Los temas llegan en inglés (Open Library) o como tus estantes de Goodreads,
+   así que cada género guarda con qué palabras se reconoce en los dos idiomas. */
+const BOOK_GEN = {
+  'Fantasía': ['fantas'],
+  'Ciencia ficción': ['ciencia ficc', 'sci-fi', 'science fiction', 'scifi', 'cyberpunk', 'distop', 'dystop'],
+  'Misterio / thriller': ['misterio', 'thriller', 'mystery', 'crime', 'suspense', 'policiac', 'detective', 'noir'],
+  'Terror': ['terror', 'horror'],
+  'Histórica': ['históric', 'historic', 'historical'],
+  'Romance': ['romance', 'románt', 'romantic'],
+  'No ficción': ['no ficción', 'nonfiction', 'non-fiction', 'divulgaci'],
+  'Ensayo': ['ensayo', 'essay'],
+  'Biografía': ['biograf', 'memoir', 'memoria', 'autobiog'],
+  'Ciencia': ['ciencia', 'science', 'physics', 'biolog', 'matemát', 'math'],
+  'Filosofía': ['filosof', 'philosoph', 'psicolog', 'psycholog'],
+  'Poesía': ['poes', 'poetry', 'poem'],
+  'Cómic / novela gráfica': ['cómic', 'comic', 'graphic novel', 'manga', 'novela gráfica', 'bande dessin'],
+  'Contemporánea': ['contempor', 'literary', 'literatura', 'realismo']
+};
+const GEN_BOOKS = Object.keys(BOOK_GEN);
+/* "science-fiction", "Science Fiction" y "ciencia_ficción" deben verse iguales */
+const flat = s => String(s || '').toLowerCase().replace(/[^a-z0-9áéíóúñü]+/g, ' ').trim();
+function bookGenreHits(selected, subjects) {
+  const subs = (subjects || []).map(flat);
+  return (selected || []).filter(g =>
+    (BOOK_GEN[g] || []).some(term => { const t = flat(term); return subs.some(s => s.includes(t)); }));
+}
+
+const MOODS = {
+  tranquilo: { label: 'Tranquilo', tags: ['acogedor', 'vidatranquila', 'melancolico', 'puzzles'] },
+  concentrado: { label: 'Concentrado', tags: ['porturnos', 'estrategia', 'decisiones', 'dificilduro', 'puzzles'] },
+  historia: { label: 'Avanzar historia', tags: ['decisiones', 'epico', 'melancolico'] },
+  nuevo: { label: 'Algo nuevo', tags: [] },
+  adrenalina: { label: 'Adrenalina', tags: ['accion', 'shooter', 'competitivo', 'dificilduro'] }
+};
+
+/* normaliza cualquier etiqueta cruda del catálogo a nuestras claves */
+function normalizeTags(rawTags = [], rawGenres = []) {
+  const raw = [...rawTags, ...rawGenres].map(t => String(t).toLowerCase().replace(/\s+/g, '-'));
+  const out = new Set();
+  for (const group of ['generos', 'mecanicas', 'tonos', 'vetos']) {
+    for (const [key, def] of Object.entries(TAX[group])) {
+      if (def.m.some(m => raw.includes(m))) out.add(key);
+    }
+  }
+  return [...out];
+}
+function tagLabel(k) {
+  for (const g of ['generos', 'mecanicas', 'tonos', 'vetos']) if (TAX[g][k]) return TAX[g][k].label;
+  return k;
+}
+
+/* ==========================================================================
+   MOTOR DE COMPATIBILIDAD
+   Devuelve {score, why:[{label, pts}]} — siempre explicable.
+   ========================================================================== */
+function compatibility(item, kind = 'game') {
+  const p = S.profile;
+  if (!p.done) return null;
+  const a = p.answers;
+  const tags = new Set(item.tags || []);
+  const why = [];
+  let score = 0;
+
+  const pick = key => (a[key] || []);
+  const overlap = (setArr) => setArr.filter(t => tags.has(t));
+
+  if (kind === 'game') {
+    const g = overlap(pick('generos'));
+    if (g.length) { const pts = Math.min(34, g.length * 13); score += pts; why.push({ label: g.map(tagLabel).join(', '), pts }); }
+
+    const m = overlap(pick('mecanicas'));
+    if (m.length) { const pts = Math.min(22, m.length * 9); score += pts; why.push({ label: m.map(tagLabel).join(', '), pts }); }
+
+    const t = overlap(pick('tonos'));
+    if (t.length) { const pts = Math.min(12, t.length * 6); score += pts; why.push({ label: t.map(tagLabel).join(', '), pts }); }
+
+    // saga o autor favorito
+    const hay = (item.series || '') + ' ' + (item.title || '');
+    const sagaHit = [...(p.favSagas || []), ...(p.favGames || [])]
+      .find(s => s && hay.toLowerCase().includes(s.toLowerCase().slice(0, Math.max(4, s.length - 2))));
+    if (sagaHit) { score += 18; why.push({ label: `De tus favoritos: ${sagaHit}`, pts: 18 }); }
+
+    // duración
+    const hrs = item.hltbMain || 0;
+    const pref = a.duracion;
+    if (hrs && pref && pref !== 'noimporta') {
+      const ok = (pref === 'corto' && hrs <= 16) || (pref === 'medio' && hrs > 12 && hrs <= 45) || (pref === 'largo' && hrs > 35);
+      const pts = ok ? 12 : -6;
+      score += pts; why.push({ label: ok ? `Duración ideal (${hrs} h)` : `Dura ${hrs} h`, pts });
+    }
+
+    // crítica
+    if (item.metacritic) { const pts = Math.round((item.metacritic - 70) / 30 * 10); score += clamp(pts, -5, 10); if (pts > 2) why.push({ label: `Bien valorado (${item.metacritic})`, pts: clamp(pts, -5, 10) }); }
+  } else {
+    const g = bookGenreHits(a.generosLibros, item.subjects);
+    if (g.length) { const pts = Math.min(40, g.length * 16); score += pts; why.push({ label: g.join(', '), pts }); }
+    const sagaHit = (p.favSagas || []).find(s => s && ((item.series || '') + ' ' + item.title).toLowerCase().includes(s.toLowerCase()));
+    if (sagaHit) { score += 20; why.push({ label: `Saga favorita: ${sagaHit}`, pts: 20 }); }
+    // cómo calificaste otros libros del mismo autor
+    if (item.author) {
+      const same = S.books.filter(b => b.author === item.author && b.rating > 0 && b.id !== item.id);
+      if (same.length) {
+        const avg = same.reduce((x, b) => x + b.rating, 0) / same.length;
+        const pts = Math.round((avg - 3) * 8);
+        if (pts) { score += pts; why.push({ label: `Le pusiste ${avg.toFixed(1)}★ a ${item.author}`, pts }); }
+      }
+    }
+    if (item.pages) {
+      const pref = a.duracionLibros;
+      const ok = (pref === 'corto' && item.pages <= 300) || (pref === 'medio' && item.pages > 200 && item.pages <= 550) || (pref === 'largo' && item.pages > 450) || !pref || pref === 'noimporta';
+      const pts = ok ? 12 : -6; score += pts;
+      why.push({ label: ok ? `${item.pages} pág — buen tamaño` : `${item.pages} pág`, pts });
+    }
+    score += 18; // base para libros, hay menos señal disponible
+  }
+
+  // vetos
+  const veto = (a.vetos || []).filter(v => tags.has(v));
+  if (veto.length) { score -= 45; why.push({ label: `Tiene ${veto.map(tagLabel).join(', ')}`, pts: -45 }); }
+
+  return { score: clamp(Math.round(score + 22), 0, 100), why: why.sort((x, y) => Math.abs(y.pts) - Math.abs(x.pts)).slice(0, 4) };
+}
+
+/* ==========================================================================
+   ¿QUÉ SIGO? — un solo botón, una sola respuesta
+   ========================================================================== */
+function candidates() {
+  const gs = S.games.filter(g => g.status === 'active' || g.status === 'backlog').map(g => ({ ...g, kind: 'game' }));
+  const bs = S.books.filter(b => b.status === 'active' || b.status === 'backlog').map(b => ({ ...b, kind: 'book' }));
+  return [...gs, ...bs];
+}
+function whatsNext(minutes, mood, exclude = []) {
+  const pool = candidates().filter(c => !exclude.includes(c.id));
+  if (!pool.length) return [];
+  const scored = pool.map(c => {
+    const comp = compatibility(c, c.kind);
+    const compScore = comp ? comp.score : 55;
+    let s = compScore * 0.45;
+    const reasons = [];
+
+    // ya empezado pesa más: terminar cuesta menos que empezar
+    if (c.status === 'active') { s += 14; reasons.push('ya lo tienes en curso'); }
+
+    // frescura: empuja lo que dejaste a medias, no lo que tocaste hoy
+    const d = daysSince(c.lastTouched);
+    if (c.status === 'active') {
+      if (d === 0) s -= 16;
+      else if (d >= 3 && d <= 21) { s += 12; reasons.push(`lo dejaste ${relDate(c.lastTouched)}`); }
+      else if (d > 21) s += 4;
+    }
+
+    // ánimo
+    if (mood && MOODS[mood] && MOODS[mood].tags.length) {
+      const hit = MOODS[mood].tags.filter(t => (c.tags || []).includes(t));
+      if (hit.length) { s += 16; reasons.push(`va con estar ${MOODS[mood].label.toLowerCase()}`); }
+    }
+    if (mood === 'nuevo') {
+      if (c.status === 'backlog') { s += 20; reasons.push('nunca lo has empezado'); }
+      else s -= 12;
+    }
+
+    // encaje con el tiempo disponible
+    if (minutes) {
+      if (minutes <= 20) { if (c.kind === 'book') { s += 10; reasons.push('cabe en un rato corto'); } else s -= 6; }
+      if (minutes >= 180 && c.kind === 'game') { s += 8; reasons.push('tienes tiempo para meterte de lleno'); }
+    }
+
+    // cerca del final: empujón para cerrar
+    const pct = itemPercent(c);
+    if (pct >= 75 && pct < 100) { s += 15; reasons.push(`vas al ${pct}%, ya casi`); }
+
+    return { item: c, s, compScore, reasons, why: comp ? comp.why : [] };
+  });
+  return scored.sort((a, b) => b.s - a.s);
+}
+function itemPercent(it) {
+  if (it.kind === 'book' || it.pages !== undefined) {
+    if (!it.pages) return it.percent || 0;
+    return clamp(Math.round((it.currentPage || 0) / it.pages * 100), 0, 100);
+  }
+  return clamp(it.percent || 0, 0, 100);
+}
+
+/* ==========================================================================
+   TARJETA DE ELEMENTO (compartida por juegos y libros)
+   ========================================================================== */
+const STATUS_LABEL = { backlog: 'Pendiente', active: 'En curso', paused: 'En pausa', done: 'Terminado', dropped: 'Lo solté' };
+const STATUS_CLASS = { backlog: '', active: 'pill-active', paused: 'pill-paused', done: 'pill-done', dropped: 'pill-dropped' };
+
+function coverEl(it) {
+  // Open Library devuelve 404 cuando no tiene portada de ese ISBN: dejamos el hueco limpio
+  return it.cover
+    ? `<img class="cover" src="${esc(it.cover)}" alt="" loading="lazy" onerror="this.removeAttribute('src');this.onerror=null">`
+    : `<div class="cover-ph">${ico(it.kind === 'book' ? 'book' : 'game', 1.6)}</div>`;
+}
+
+function starsRow(kind, id, rating) {
+  return `<div class="row" style="gap:3px">
+    ${[1, 2, 3, 4, 5].map(n => `<button data-act="setStars" data-kind="${kind}" data-id="${id}" data-v="${n}"
+      aria-label="${n} de 5" style="width:30px;height:30px;display:grid;place-items:center;
+      color:${n <= rating ? 'var(--books)' : 'var(--text-3)'}">
+      <svg viewBox="0 0 24 24" width="19" height="19" fill="${n <= rating ? 'currentColor' : 'none'}"
+        stroke="currentColor" stroke-width="1.7" stroke-linejoin="round">
+        <path d="M12 3.2 14.3 9l6.2.3-4.8 3.9 1.6 6-5.3-3.4L6.7 19l1.6-6L3.5 9.3 9.7 9z"/></svg></button>`).join('')}
+    ${rating ? `<button class="btn btn-ghost btn-sm" data-act="setStars" data-kind="${kind}" data-id="${id}" data-v="0">quitar</button>` : ''}
+  </div>`;
+}
+
+function itemCard(it, opts = {}) {
+  const kind = it.kind || (it.pages !== undefined ? 'book' : 'game');
+  const tint = kind === 'book' ? 'tint-books' : 'tint-games';
+  const pct = itemPercent({ ...it, kind });
+  const comp = compatibility(it, kind);
+  const running = !!it.timerStart;
+  const liveMin = running ? (Date.now() - it.timerStart) / 60000 : 0;
+  const sub = kind === 'book'
+    ? [it.author, it.series ? it.series + (it.seriesIndex ? ` #${it.seriesIndex}` : '') : '',
+    it.rating ? '★'.repeat(it.rating) : ''].filter(Boolean).join(' · ')
+    : [it.platform, it.hltbMain ? `~${it.hltbMain} h` : ''].filter(Boolean).join(' · ');
+
+  return `<div class="card stripe ${tint}" data-id="${it.id}">
+    <div class="row" style="align-items:flex-start">
+      ${coverEl({ ...it, kind })}
+      <div class="grow">
+        <div class="row-between" style="align-items:flex-start">
+          <div class="grow">
+            <h3 style="line-height:1.25">${esc(it.title)}</h3>
+            ${sub ? `<div class="dim" style="font-size:12.5px;margin-top:2px">${esc(sub)}</div>` : ''}
+          </div>
+          ${comp ? scoreRing(comp.score, kind) : ''}
+        </div>
+        <div class="row" style="gap:7px;margin-top:8px;flex-wrap:wrap">
+          <span class="pill ${STATUS_CLASS[it.status]}"><i class="dot"></i>${STATUS_LABEL[it.status]}</span>
+          ${!it.noTime && it.minutes ? `<span class="dim num" style="font-size:12px">${fmtHrs(it.minutes)}</span>` : ''}
+          ${running ? `<span class="timer-live" data-tick><i class="blip"></i>${fmtMin(liveMin)}</span>` : ''}
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:12px">
+      <div class="row-between" style="margin-bottom:5px">
+        <span class="eyebrow">Avance</span>
+        <span class="num" style="font-size:12.5px;font-weight:600">${pct}%</span>
+      </div>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+    </div>
+
+    ${opts.compact ? '' : `
+    <div class="row" style="gap:6px;margin-top:12px;flex-wrap:wrap">
+      ${it.noTime ? '' : running
+        ? `<button class="btn btn-sm btn-primary" data-act="timerStop" data-kind="${kind}" data-id="${it.id}">${ico('pause')}Parar</button>`
+        : `<button class="btn btn-sm" data-act="timerStart" data-kind="${kind}" data-id="${it.id}" title="Cronómetro">${ico('play')}</button>
+           <button class="btn btn-sm" data-act="quick" data-kind="${kind}" data-id="${it.id}" data-min="15">+15m</button>
+           <button class="btn btn-sm" data-act="quick" data-kind="${kind}" data-id="${it.id}" data-min="30">+30m</button>
+           <button class="btn btn-sm" data-act="quick" data-kind="${kind}" data-id="${it.id}" data-min="60">+1h</button>`}
+      <button class="btn btn-sm" data-act="openItem" data-kind="${kind}" data-id="${it.id}">Detalles</button>
+    </div>`}
+  </div>`;
+}
+
+function scoreRing(score, kind) {
+  const tint = kind === 'book' ? 'tint-books' : 'tint-games';
+  const C = 2 * Math.PI * 19;
+  const off = C - (score / 100) * C;
+  return `<div class="ring ${tint}" title="Compatibilidad contigo: ${score}/100">
+    <svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="19" fill="none" stroke-width="4"/>
+    <circle class="val" cx="22" cy="22" r="19" fill="none" stroke-width="4"
+      stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"/></svg>
+    <b>${score}</b></div>`;
+}
+
+/* ==========================================================================
+   PUENTE CON CLAUDE — arma el contexto y te lo pasa a tu Claude de siempre.
+   Gratis con tu suscripción. El chat integrado (llave de API) es opcional.
+   ========================================================================== */
+function profileSummary() {
+  const p = S.profile, a = p.answers || {};
+  if (!p.done) return 'Todavía no he llenado mi perfil de gustos.';
+  const L = arr => (arr || []).map(tagLabel).join(', ') || '—';
+  return [
+    `Géneros que me gustan: ${L(a.generos)}`,
+    `Mecánicas: ${L(a.mecanicas)}`,
+    `Tonos: ${L(a.tonos)}`,
+    `Prefiero juegos de duración: ${a.duracion || '—'}`,
+    `Dificultad: ${a.dificultad || '—'}`,
+    `No me gusta / evito: ${L(a.vetos)}`,
+    p.favGames.length ? `Juegos favoritos de siempre: ${p.favGames.join(', ')}` : '',
+    p.favSagas.length ? `Sagas favoritas: ${p.favSagas.join(', ')}` : '',
+    (a.generosLibros || []).length ? `Géneros de libros: ${a.generosLibros.join(', ')}` : ''
+  ].filter(Boolean).join('\n');
+}
+
+function promptForItem(it, kind) {
+  const pct = itemPercent({ ...it, kind });
+  const base = kind === 'book'
+    ? `Estoy leyendo "${it.title}"${it.author ? ` de ${it.author}` : ''}${it.series ? ` (saga: ${it.series})` : ''}. Voy en la página ${it.currentPage || 0} de ${it.pages || '?'} (${pct}%).`
+    : `Estoy jugando "${it.title}"${it.platform ? ` en ${it.platform}` : ''}. Voy aproximadamente en el ${pct}% y llevo ${fmtHrs(it.minutes || 0)} jugadas.`;
+  const notes = it.notes ? `\n\nMis notas hasta ahora:\n${it.notes}` : '';
+  const ask = kind === 'book'
+    ? `\n\nSin spoilers más allá de donde voy: recuérdame dónde me quedé, qué hilos están abiertos, y ayúdame a retomarlo.`
+    : `\n\nSin spoilers más allá de donde voy: dime qué debería hacer ahora, qué me conviene no perderme en esta zona, y si hay algo que se vuelva inaccesible si avanzo.`;
+  return `${base}${notes}${ask}\n\nContexto sobre mis gustos:\n${profileSummary()}`;
+}
+
+function promptForBacklog(minutes, mood) {
+  const list = candidates().map(c => {
+    const pct = itemPercent(c);
+    const tags = (c.tags || []).map(tagLabel).join(', ');
+    return `- ${c.title} [${c.kind === 'book' ? 'libro' : 'juego'}] — ${STATUS_LABEL[c.status]}, ${pct}% avanzado, última vez ${relDate(c.lastTouched)}${tags ? `, etiquetas: ${tags}` : ''}${c.hltbMain ? `, dura ~${c.hltbMain} h` : ''}`;
+  }).join('\n');
+  const ctx = [];
+  if (minutes) ctx.push(`Tengo ${minutes >= 60 ? Math.round(minutes / 60) + ' hora(s)' : minutes + ' minutos'} disponibles.`);
+  if (mood && MOODS[mood]) ctx.push(`Ando ${MOODS[mood].label.toLowerCase()}.`);
+  return `Tengo TDAH y me satura mi backlog de hobbies. Necesito que elijas UNA sola cosa por mí y me digas por qué, en 3 líneas máximo. No me des una lista.
+
+${ctx.join(' ')}
+
+Mi backlog:
+${list || '(vacío)'}
+
+Mis gustos:
+${profileSummary()}`;
+}
+
+function promptForDeck(d) {
+  const cards = (d.cards || []).map(c => `${c.qty} ${c.name}${c.proxy ? '  [proxy]' : ''}`).join('\n');
+  const s = deckStats(d);
+  const proxyNote = s.proxyQty
+    ? `\n\nLo marcado como [proxy] no lo tengo en físico — son ${s.proxyQty} cartas que costarían ${fmtMoney(s.proxyValue)} comprarlas. Tenlo en cuenta si me sugieres qué priorizar.`
+    : '';
+  const ms = S.matches.filter(m => m.deckId === d.id);
+  const w = ms.filter(m => m.result === 'W').length, l = ms.filter(m => m.result === 'L').length;
+  const bad = {};
+  ms.filter(m => m.result === 'L').forEach(m => { const k = m.opponent || 'desconocido'; bad[k] = (bad[k] || 0) + 1; });
+  const worst = Object.entries(bad).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, v]) => `${k} (${v} derrotas)`).join(', ');
+  return `Este es mi deck de Magic: the Gathering "${d.name}" (formato ${d.format}${d.commander ? `, comandante: ${d.commander}` : ''}).
+
+Récord: ${w}-${l}${worst ? `\nContra lo que más pierdo: ${worst}` : ''}
+
+Lista:
+${cards || '(vacía)'}${proxyNote}
+
+${d.notes ? `Notas mías: ${d.notes}\n\n` : ''}Dime: qué 3 cartas cortaría, qué 3 metería, y si mi curva de maná tiene un problema. Sé concreto y considera el presupuesto — prefiero cartas baratas.`;
+}
+
+function claudeBridge(prompt, title = 'Preguntar a Claude') {
+  const hasKey = !!(S.settings.anthropicKey || '').trim();
+  sheet(title, `
+    <div class="stack">
+      <div class="banner banner-accent">${ico('info')}<div>Esto se abre en tu app de Claude con tu suscripción. No gasta créditos de API.</div></div>
+      <label class="field"><span class="label">Lo que se va a preguntar</span>
+        <textarea id="bridgeTxt" style="min-height:200px;font-size:13.5px">${esc(prompt)}</textarea></label>
+      <button class="btn btn-primary btn-block" data-act="bridgeOpen">${ico('send')}Abrir en Claude</button>
+      <button class="btn btn-block" data-act="bridgeCopy">Copiar al portapapeles</button>
+      ${hasKey ? `<button class="btn btn-block" data-act="bridgeInline">${ico('spark')}Responder aquí mismo (usa tu llave de API)</button>` : ''}
+      <div id="bridgeAnswer"></div>
+    </div>`);
+}
+
+/* ==========================================================================
+   VISTA: HOY
+   ========================================================================== */
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 6) return 'Buenas noches';
+  if (h < 13) return 'Buenos días';
+  if (h < 20) return 'Buenas tardes';
+  return 'Buenas noches';
+}
+
+function viewHoy() {
+  const active = [...S.games.filter(g => g.status === 'active').map(g => ({ ...g, kind: 'game' })),
+  ...S.books.filter(b => b.status === 'active').map(b => ({ ...b, kind: 'book' }))]
+    .sort((a, b) => daysSince(b.lastTouched) - daysSince(a.lastTouched));
+  const shown = active.slice(0, S.settings.calmLimit);
+  const overflow = active.length - shown.length;
+  const stale = active.filter(x => daysSince(x.lastTouched) >= S.settings.staleDays);
+  const backlogN = S.games.filter(g => g.status === 'backlog').length + S.books.filter(b => b.status === 'backlog').length;
+  const todayMin = minutesOn(todayKey());
+  const st = streak();
+  const wk = weekMinutes(), goal = S.settings.weeklyGoalMin;
+
+  const empty = !S.games.length && !S.books.length;
+
+  return `
+  <div class="stack-lg" style="padding-top:18px">
+    <div>
+      <div class="eyebrow">${esc(greeting())}, Raul</div>
+      <h1 style="margin-top:6px">${todayMin > 0
+      ? `Hoy llevas <span class="num" style="color:var(--accent)">${fmtMin(todayMin)}</span>`
+      : 'Un día a la vez'}</h1>
+    </div>
+
+    ${empty ? `
+      <div class="card">
+        <div class="empty" style="padding:22px 4px">
+          ${ico('leaf', 1.6)}
+          <p><b style="color:var(--text)">Bitácora está vacía.</b><br>
+          Agrega lo primero que se te venga a la mente — no tiene que ser completo ni ordenado.</p>
+          <div class="row" style="gap:8px;justify-content:center;flex-wrap:wrap">
+            <button class="btn btn-primary btn-sm" data-act="addGame">${ico('plus')}Un juego</button>
+            <button class="btn btn-sm" data-act="addBook">${ico('plus')}Un libro</button>
+            <button class="btn btn-sm" data-act="addDeck">${ico('plus')}Un deck</button>
+          </div>
+        </div>
+      </div>` : `
+
+    <button class="hero-btn" data-act="next">
+      <span class="dice">${ico('spark', 2)}</span>
+      <span>¿Qué sigo?
+        <small>Una sola cosa. Yo decido por ti.</small></span>
+    </button>
+
+    ${S.settings.showStreaks ? `
+    <div class="card-flat">
+      <div class="statgrid">
+        <div class="stat"><b>${st}</b><span>días seguidos</span></div>
+        <div class="stat"><b>${(wk / 60).toFixed(1)}<span style="font-size:12px"> h</span></b><span>esta semana</span></div>
+        <div class="stat"><b>${goal ? Math.round(wk / goal * 100) : 0}<span style="font-size:12px">%</span></b><span>de tu meta</span></div>
+      </div>
+      ${goal ? `<div class="bar" style="margin-top:12px"><i style="width:${clamp(wk / goal * 100, 0, 100)}%"></i></div>` : ''}
+    </div>` : ''}
+
+    ${shown.length ? `
+    <section>
+      <div class="section-head">
+        <h2>En curso</h2>
+        ${overflow > 0 ? `<button class="btn btn-ghost btn-sm" data-act="go" data-r="juegos">+${overflow} más</button>` : ''}
+      </div>
+      <div class="stack">${shown.map(it => itemCard(it)).join('')}</div>
+    </section>` : `
+    <div class="card">
+      <div class="empty" style="padding:18px 4px">
+        <p>No tienes nada en curso ahora mismo. Está bien.</p>
+        <button class="btn btn-primary btn-sm" data-act="next">${ico('spark')}Elige algo por mí</button>
+      </div>
+    </div>`}
+
+    ${stale.length ? `
+    <section>
+      <div class="section-head"><h2>¿Seguimos con esto?</h2></div>
+      <div class="stack">
+        ${stale.map(x => `
+        <div class="card">
+          <div class="row-between">
+            <div class="grow">
+              <h3>${esc(x.title)}</h3>
+              <div class="dim" style="font-size:12.5px;margin-top:2px">Sin tocarlo desde ${relDate(x.lastTouched)}</div>
+            </div>
+          </div>
+          <div class="row" style="gap:7px;margin-top:11px;flex-wrap:wrap">
+            <button class="btn btn-sm btn-primary" data-act="retomar" data-kind="${x.kind}" data-id="${x.id}">Sigo con esto</button>
+            <button class="btn btn-sm" data-act="setStatus" data-kind="${x.kind}" data-id="${x.id}" data-v="paused">Pausarlo</button>
+            <button class="btn btn-sm btn-ghost" data-act="drop" data-kind="${x.kind}" data-id="${x.id}">Lo dejé, y está bien</button>
+          </div>
+        </div>`).join('')}
+      </div>
+    </section>` : ''}
+
+    ${backlogN ? `
+    <section>
+      <button class="card-flat" style="width:100%;text-align:left;display:block" data-act="toggleBacklog">
+        <div class="row-between">
+          <div>
+            <div class="eyebrow">Pendientes</div>
+            <div class="muted" style="font-size:13.5px;margin-top:3px">${backlogN} cosa${backlogN === 1 ? '' : 's'} esperando. Sin prisa.</div>
+          </div>
+          <span class="dim" style="width:18px;height:18px;display:block">${ico('chev')}</span>
+        </div>
+      </button>
+    </section>` : ''}
+    `}
+  </div>`;
+}
+
+/* ==========================================================================
+   HOJA: ¿QUÉ SIGO?
+   ========================================================================== */
+let nextState = { minutes: 60, mood: null, skipped: [] };
+function openNext() {
+  nextState.skipped = [];
+  sheet('¿Qué sigo?', nextSheetHTML());
+}
+function nextSheetHTML() {
+  const times = [[15, '15 min'], [45, '45 min'], [120, '2 horas'], [300, 'Toda la tarde']];
+  return `
+  <div class="stack">
+    <div>
+      <div class="label" style="margin-bottom:8px">¿Cuánto tiempo tienes?</div>
+      <div class="chips">${times.map(([v, l]) =>
+    `<button class="chip ${nextState.minutes === v ? 'on' : ''}" data-act="nextTime" data-v="${v}">${l}</button>`).join('')}</div>
+    </div>
+    <div>
+      <div class="label" style="margin-bottom:8px">¿Cómo andas?</div>
+      <div class="chips">${Object.entries(MOODS).map(([k, m]) =>
+      `<button class="chip ${nextState.mood === k ? 'on' : ''}" data-act="nextMood" data-v="${k}">${m.label}</button>`).join('')}</div>
+    </div>
+    <div class="divider"></div>
+    <div id="nextResult">${nextResultHTML()}</div>
+  </div>`;
+}
+function nextResultHTML() {
+  const list = whatsNext(nextState.minutes, nextState.mood, nextState.skipped);
+  if (!list.length) return `<div class="empty"><p>No queda nada que sugerir con esos filtros.<br>
+    <button class="btn btn-sm" data-act="nextReset">Empezar de nuevo</button></p></div>`;
+  const top = list[0], it = top.item;
+  const pct = itemPercent(it);
+  const reason = top.reasons.length ? top.reasons.slice(0, 2).join(' y ') : 'encaja con lo que te gusta';
+  return `
+  <div class="result-card card stripe ${it.kind === 'book' ? 'tint-books' : 'tint-games'}">
+    <div class="row" style="align-items:flex-start">
+      ${coverEl(it)}
+      <div class="grow">
+        <div class="eyebrow">${it.kind === 'book' ? 'Libro' : 'Juego'}</div>
+        <h2 style="margin-top:3px;line-height:1.2">${esc(it.title)}</h2>
+        <div class="muted" style="font-size:13px;margin-top:6px;line-height:1.5">Porque ${esc(reason)}.</div>
+      </div>
+      ${scoreRing(top.compScore, it.kind)}
+    </div>
+    ${pct > 0 ? `<div style="margin-top:12px"><div class="bar"><i style="width:${pct}%"></i></div></div>` : ''}
+  </div>
+  <div class="row" style="gap:8px;margin-top:12px">
+    <button class="btn btn-primary grow" data-act="nextGo" data-kind="${it.kind}" data-id="${it.id}">Vamos con esto</button>
+    <button class="btn" data-act="nextSkip" data-id="${it.id}">Otra</button>
+  </div>
+  <button class="btn btn-ghost btn-block btn-sm" style="margin-top:8px" data-act="nextAsk">${ico('spark')}Que Claude me ayude a decidir</button>`;
+}
+
+/* ==========================================================================
+   CATÁLOGOS EXTERNOS
+   RAWG (juegos, requiere llave gratis) · Open Library (libros) · Scryfall (Magic)
+   ========================================================================== */
+const API = {
+  online: null,
+  async probe() {
+    try {
+      const r = await fetch('https://api.scryfall.com/cards/random?q=t:land', { method: 'GET' });
+      this.online = r.ok;
+    } catch (e) { this.online = false; }
+    return this.online;
+  },
+
+  async searchGames(q) {
+    const key = (S.settings.rawgKey || '').trim();
+    if (!key) throw new Error('nokey');
+    const url = `https://api.rawg.io/api/games?key=${encodeURIComponent(key)}&search=${encodeURIComponent(q)}&page_size=10`;
+    const r = await fetch(url);
+    if (r.status === 401) throw new Error('badkey');
+    if (!r.ok) throw new Error('http ' + r.status);
+    const j = await r.json();
+    return (j.results || []).map(g => ({
+      extId: g.id,
+      title: g.name,
+      cover: g.background_image || '',
+      year: (g.released || '').slice(0, 4),
+      metacritic: g.metacritic || null,
+      hltbMain: g.playtime || null,
+      platforms: (g.platforms || []).map(p => p.platform.name),
+      tags: normalizeTags((g.tags || []).map(t => t.slug), (g.genres || []).map(x => x.slug)),
+      rawGenres: (g.genres || []).map(x => x.name)
+    }));
+  },
+
+  async gameDetail(id) {
+    const key = (S.settings.rawgKey || '').trim();
+    const r = await fetch(`https://api.rawg.io/api/games/${id}?key=${encodeURIComponent(key)}`);
+    if (!r.ok) return null;
+    const g = await r.json();
+    let series = '';
+    try {
+      const rs = await fetch(`https://api.rawg.io/api/games/${id}/game-series?key=${encodeURIComponent(key)}&page_size=3`);
+      if (rs.ok) { const js = await rs.json(); if ((js.results || []).length) series = js.results[0].name.split(':')[0]; }
+    } catch (e) { }
+    return {
+      series,
+      website: g.website || '',
+      developer: ((g.developers || [])[0] || {}).name || ''
+    };
+  },
+
+  async searchBooks(q) {
+    const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=10&fields=key,title,author_name,first_publish_year,number_of_pages_median,cover_i,subject`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('http ' + r.status);
+    const j = await r.json();
+    return (j.docs || []).map(b => ({
+      extId: b.key,
+      title: b.title,
+      author: (b.author_name || [])[0] || '',
+      year: b.first_publish_year || '',
+      pages: b.number_of_pages_median || null,
+      cover: b.cover_i ? `https://covers.openlibrary.org/b/id/${b.cover_i}-M.jpg` : '',
+      subjects: (b.subject || []).slice(0, 12)
+    }));
+  },
+
+  async searchCards(q) {
+    const r = await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(q)}&unique=cards&order=name`);
+    if (r.status === 404) return [];
+    if (!r.ok) throw new Error('http ' + r.status);
+    const j = await r.json();
+    return (j.data || []).slice(0, 20).map(cardFromScryfall);
+  },
+
+  /* resuelve una lista pegada, en lotes de 75 como pide Scryfall */
+  async resolveList(names) {
+    const out = [], missing = [];
+    for (let i = 0; i < names.length; i += 75) {
+      const batch = names.slice(i, i + 75);
+      const r = await fetch('https://api.scryfall.com/cards/collection', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifiers: batch.map(n => ({ name: n })) })
+      });
+      if (!r.ok) throw new Error('http ' + r.status);
+      const j = await r.json();
+      (j.data || []).forEach(c => out.push(cardFromScryfall(c)));
+      (j.not_found || []).forEach(n => missing.push(n.name));
+      if (i + 75 < names.length) await new Promise(s => setTimeout(s, 120)); // cortesía con Scryfall
+    }
+    return { cards: out, missing };
+  }
+};
+
+function cardFromScryfall(c) {
+  const face = c.card_faces && c.card_faces[0] && !c.image_uris ? c.card_faces[0] : c;
+  return {
+    scryfallId: c.id,
+    name: c.name,
+    set: (c.set || '').toUpperCase(),
+    setName: c.set_name || '',
+    cmc: c.cmc ?? 0,
+    type: (c.type_line || '').split('—')[0].trim(),
+    typeLine: c.type_line || '',
+    colors: c.color_identity || [],
+    rarity: c.rarity || '',
+    price: parseFloat((c.prices || {}).usd || (c.prices || {}).usd_foil || 0) || 0,
+    img: (face.image_uris || {}).small || '',
+    imgBig: (face.image_uris || {}).normal || '',
+    url: c.scryfall_uri || ''
+  };
+}
+
+function netBanner() {
+  if (API.online !== false) return '';
+  return `<div class="banner">${ico('info')}<div><b>Búsqueda automática apagada.</b>
+    Esta copia no puede conectarse a los catálogos. Puedes capturar todo a mano sin problema —
+    o abrir la versión instalable, donde sí funciona.</div></div>`;
+}
+
+/* ==========================================================================
+   VISTA: JUEGOS  ·  VISTA: LIBROS
+   ========================================================================== */
+const TABS = [['activos', 'En curso'], ['pendientes', 'Pendientes'], ['hechos', 'Terminados'], ['solte', 'Solté']];
+const TAB_STATUS = { activos: ['active', 'paused'], pendientes: ['backlog'], hechos: ['done'], solte: ['dropped'] };
+
+function listView(kind) {
+  const isBook = kind === 'book';
+  const all = (isBook ? S.books : S.games).map(x => ({ ...x, kind }));
+  const tabKey = isBook ? 'bookTab' : 'gameTab';
+  const tab = S.ui[tabKey] || 'activos';
+  const items = all.filter(x => TAB_STATUS[tab].includes(x.status))
+    .sort((a, b) => {
+      const ca = compatibility(a, kind), cb = compatibility(b, kind);
+      if (tab === 'pendientes' && ca && cb) return cb.score - ca.score;
+      return daysSince(a.lastTouched) - daysSince(b.lastTouched);
+    });
+  const counts = Object.fromEntries(TABS.map(([k]) => [k, all.filter(x => TAB_STATUS[k].includes(x.status)).length]));
+  const totalMin = all.reduce((a, x) => a + (x.minutes || 0), 0);
+  const doneN = all.filter(x => x.status === 'done').length;
+
+  return `
+  <div class="stack-lg" style="padding-top:18px">
+    <div class="row-between">
+      <h1>${isBook ? 'Libros' : 'Juegos'}</h1>
+      <button class="btn btn-primary btn-sm" data-act="${isBook ? 'addBook' : 'addGame'}">${ico('plus')}Agregar</button>
+    </div>
+
+    ${netBanner()}
+
+    ${all.length ? `
+    <div class="card-flat">
+      <div class="statgrid">
+        <div class="stat"><b>${all.length}</b><span>en total</span></div>
+        <div class="stat"><b>${doneN}</b><span>${isBook ? 'leídos' : 'terminados'}</span></div>
+        <div class="stat"><b>${(totalMin / 60).toFixed(0)}<span style="font-size:12px"> h</span></b><span>acumuladas</span></div>
+      </div>
+    </div>
+
+    <div class="tabs" role="tablist">
+      ${TABS.map(([k, l]) => `<button role="tab" aria-selected="${tab === k}" data-act="tab" data-kindtab="${tabKey}" data-v="${k}">${l}${counts[k] ? ` <span class="num dim">${counts[k]}</span>` : ''}</button>`).join('')}
+    </div>
+
+    <div class="stack">
+      ${items.length ? items.map(it => itemCard(it)).join('')
+        : `<div class="empty"><p>Nada aquí todavía.</p></div>`}
+    </div>
+
+    ${tab === 'pendientes' && items.length > 1 ? `
+      <button class="btn btn-ghost btn-block btn-sm" data-act="askBacklog">${ico('spark')}Que Claude me ayude a elegir</button>` : ''}
+    ${isBook ? `<button class="btn btn-ghost btn-block btn-sm" data-act="goodreads">Traer más desde Goodreads</button>` : ''}
+    ` : `
+    <div class="card">
+      <div class="empty">
+        ${ico(isBook ? 'book' : 'game', 1.5)}
+        <p>Aún no agregas ${isBook ? 'ningún libro' : 'ningún juego'}.<br>
+        ${API.online === false ? 'Captúralos a mano — es rápido.' : 'Busca por título y se llena solo.'}</p>
+        <div class="row" style="gap:8px;justify-content:center;flex-wrap:wrap">
+          <button class="btn btn-primary" data-act="${isBook ? 'addBook' : 'addGame'}">${ico('plus')}Agregar ${isBook ? 'un libro' : 'un juego'}</button>
+          ${isBook ? `<button class="btn" data-act="goodreads">Traer de Goodreads</button>` : ''}
+        </div>
+      </div>
+    </div>`}
+  </div>`;
+}
+const viewJuegos = () => listView('game');
+const viewLibros = () => listView('book');
+
+/* ==========================================================================
+   HOJA: AGREGAR (con búsqueda en catálogo)
+   ========================================================================== */
+function openAdd(kind) {
+  const isBook = kind === 'book';
+  sheet(isBook ? 'Agregar libro' : 'Agregar juego', `
+    <div class="stack">
+      ${API.online === false ? netBanner() : `
+      <label class="field"><span class="label">Buscar por título</span>
+        <div class="row">
+          <input type="search" id="q" class="grow" placeholder="${isBook ? 'Dune, El nombre del viento…' : 'Hollow Knight, Zelda…'}" autocomplete="off">
+          <button class="btn" data-act="doSearch" data-kind="${kind}">${ico('search')}</button>
+        </div>
+      </label>`}
+      <div id="results"></div>
+      <div class="divider"></div>
+      ${isBook ? `<button class="btn btn-block" data-act="goodreads">Traer mi biblioteca de Goodreads</button>` : ''}
+      <button class="btn btn-block" data-act="manualAdd" data-kind="${kind}">Capturarlo a mano</button>
+    </div>`, body => {
+    const q = body.querySelector('#q');
+    if (q) {
+      q.focus();
+      let t; q.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => runSearch(kind), 420); });
+      q.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); runSearch(kind); } });
+    }
+  });
+}
+
+async function runSearch(kind) {
+  const q = ($('#q') || {}).value?.trim();
+  const box = $('#results'); if (!box) return;
+  if (!q || q.length < 2) { box.innerHTML = ''; return; }
+  box.innerHTML = `<div class="dim" style="padding:12px 0;font-size:13.5px">Buscando…</div>`;
+  try {
+    const res = kind === 'book' ? await API.searchBooks(q) : await API.searchGames(q);
+    if (!res.length) { box.innerHTML = `<div class="dim" style="padding:12px 0;font-size:13.5px">Sin resultados. Puedes capturarlo a mano.</div>`; return; }
+    searchCache = res;
+    box.innerHTML = `<div class="searchres">${res.map((r, i) => `
+      <button data-act="pick" data-kind="${kind}" data-i="${i}">
+        ${r.cover ? `<img class="cover" src="${esc(r.cover)}" alt="" loading="lazy">` : `<div class="cover-ph">${ico(kind === 'book' ? 'book' : 'game', 1.6)}</div>`}
+        <span class="grow">
+          <b style="display:block;font-size:14.5px;line-height:1.3">${esc(r.title)}</b>
+          <span class="dim" style="font-size:12.5px;display:block;margin-top:3px">
+            ${esc([r.year, r.author, r.pages ? r.pages + ' pág' : '', r.hltbMain ? `~${r.hltbMain} h` : '', r.metacritic ? `MC ${r.metacritic}` : ''].filter(Boolean).join(' · '))}
+          </span>
+        </span>
+      </button>`).join('')}</div>`;
+  } catch (e) {
+    const msg = e.message === 'nokey'
+      ? `Necesitas una llave gratis de RAWG para buscar juegos. <button class="btn btn-sm" data-act="go" data-r="yo" style="margin-top:8px">Ir a Ajustes</button>`
+      : e.message === 'badkey' ? 'Esa llave de RAWG no es válida. Revísala en Ajustes.'
+        : 'No se pudo conectar al catálogo. Captúralo a mano.';
+    box.innerHTML = `<div class="banner" style="margin-top:6px">${ico('info')}<div>${msg}</div></div>`;
+  }
+}
+let searchCache = [];
+
+/* ==========================================================================
+   HOJA: DETALLE DE UN ELEMENTO
+   ========================================================================== */
+function openItem(kind, id) {
+  const it = findItem(kind, id); if (!it) return;
+  const isBook = kind === 'book';
+  const pct = itemPercent({ ...it, kind });
+  const comp = compatibility(it, kind);
+  const running = !!it.timerStart;
+  const guideURL = isBook
+    ? `https://www.goodreads.com/search?q=${encodeURIComponent(it.title)}`
+    : `https://www.google.com/search?q=${encodeURIComponent(it.title + ' guía walkthrough')}`;
+
+  sheet(it.title, `
+  <div class="stack-lg">
+    <div class="row" style="align-items:flex-start">
+      ${coverEl({ ...it, kind })}
+      <div class="grow">
+        <div class="dim" style="font-size:12.5px">${esc([isBook ? it.author : it.platform, it.series].filter(Boolean).join(' · ') || '—')}</div>
+        ${comp ? `<div class="row" style="gap:8px;margin-top:8px">${scoreRing(comp.score, kind)}
+          <div class="dim" style="font-size:11.5px;line-height:1.45">${comp.why.map(w =>
+    `${w.pts > 0 ? '+' : ''}${w.pts} ${esc(w.label)}`).join('<br>') || 'Sin datos suficientes'}</div></div>` : ''}
+      </div>
+    </div>
+
+    <div>
+      <div class="label" style="margin-bottom:8px">Estado</div>
+      <div class="chips">
+        ${Object.entries(STATUS_LABEL).map(([k, l]) =>
+      `<button class="chip ${it.status === k ? 'on' : ''}" data-act="setStatus" data-kind="${kind}" data-id="${id}" data-v="${k}">${l}</button>`).join('')}
+      </div>
+    </div>
+
+    <div>
+      <div class="row-between" style="margin-bottom:8px">
+        <span class="label">Avance</span><span class="num" style="font-weight:600">${pct}%</span>
+      </div>
+      ${isBook ? `
+        <div class="field-row">
+          <label class="field"><span class="label">Página actual</span>
+            <input type="number" min="0" value="${it.currentPage || 0}" data-act="setField" data-kind="${kind}" data-id="${id}" data-f="currentPage"></label>
+          <label class="field"><span class="label">Total de páginas</span>
+            <input type="number" min="0" value="${it.pages || ''}" data-act="setField" data-kind="${kind}" data-id="${id}" data-f="pages"></label>
+        </div>`
+      : `<input type="range" min="0" max="100" step="5" value="${pct}" style="width:100%;min-height:auto;padding:0;border:none;background:none"
+            data-act="setField" data-kind="${kind}" data-id="${id}" data-f="percent">`}
+      <div class="bar" style="margin-top:10px"><i style="width:${pct}%"></i></div>
+    </div>
+
+    ${it.noTime ? '' : `
+    <div>
+      <div class="row-between" style="margin-bottom:8px">
+        <span class="label">Tiempo</span>
+        <span class="num" style="font-weight:600">${fmtHrs(it.minutes || 0)}</span>
+      </div>
+      <div class="row" style="gap:6px;flex-wrap:wrap">
+        ${running
+        ? `<button class="btn btn-sm btn-primary" data-act="timerStop" data-kind="${kind}" data-id="${id}">${ico('pause')}Parar cronómetro</button>`
+        : `<button class="btn btn-sm" data-act="timerStart" data-kind="${kind}" data-id="${id}">${ico('play')}Cronómetro</button>`}
+        ${[15, 30, 60, 120].map(m => `<button class="btn btn-sm" data-act="quick" data-kind="${kind}" data-id="${id}" data-min="${m}">+${m < 60 ? m + 'm' : (m / 60) + 'h'}</button>`).join('')}
+      </div>
+      <label class="field" style="margin-top:12px">
+        <span class="label">Corregir total real (horas)</span>
+        <input type="number" min="0" step="0.5" placeholder="${((it.minutes || 0) / 60).toFixed(1)}"
+          data-act="syncHours" data-kind="${kind}" data-id="${id}">
+      </label>
+      <div class="dim" style="font-size:11.5px;margin-top:5px;line-height:1.45">
+        Para cuando revises el tiempo real en tu perfil de Switch y quieras cuadrarlo.
+      </div>
+    </div>`}
+
+    <label class="row" style="gap:10px;cursor:pointer">
+      <input type="checkbox" ${it.noTime ? 'checked' : ''} style="width:20px;height:20px;min-height:auto;flex:none;accent-color:var(--accent)"
+        data-act="toggleNoTime" data-kind="${kind}" data-id="${id}">
+      <span style="font-size:13.5px">No llevar tiempo en esto, solo avance</span>
+    </label>
+
+    <div>
+      <div class="label" style="margin-bottom:8px">Etiquetas — alimentan tu compatibilidad</div>
+      <div class="chips">
+        ${['generos', 'mecanicas', 'tonos'].flatMap(g => Object.entries(TAX[g]).map(([k, d]) =>
+          `<button class="chip chip-xs ${(it.tags || []).includes(k) ? 'on' : ''}" data-act="toggleTag" data-kind="${kind}" data-id="${id}" data-v="${k}">${d.label}</button>`)).join('')}
+      </div>
+    </div>
+
+    ${isBook ? `
+      <div>
+        <div class="label" style="margin-bottom:6px">Qué te pareció</div>
+        ${starsRow(kind, id, it.rating || 0)}
+      </div>
+      <div class="field-row">
+        <label class="field"><span class="label">Autor</span><input type="text" value="${esc(it.author || '')}" data-act="setField" data-kind="${kind}" data-id="${id}" data-f="author"></label>
+        <label class="field"><span class="label">Saga</span><input type="text" value="${esc(it.series || '')}" data-act="setField" data-kind="${kind}" data-id="${id}" data-f="series"></label>
+      </div>`
+      : `<div class="field-row">
+        <label class="field"><span class="label">Plataforma</span><input type="text" value="${esc(it.platform || '')}" placeholder="Switch, PC…" data-act="setField" data-kind="${kind}" data-id="${id}" data-f="platform"></label>
+        <label class="field"><span class="label">Saga</span><input type="text" value="${esc(it.series || '')}" data-act="setField" data-kind="${kind}" data-id="${id}" data-f="series"></label>
+      </div>
+      <label class="field"><span class="label">Duración estimada (horas)</span>
+        <input type="number" min="0" value="${it.hltbMain || ''}" data-act="setField" data-kind="${kind}" data-id="${id}" data-f="hltbMain"></label>`}
+
+    <div>
+      <div class="row-between" style="margin-bottom:8px">
+        <span class="label">Pendientes dentro de esto</span>
+        <button class="btn btn-ghost btn-sm" data-act="addCheck" data-kind="${kind}" data-id="${id}">${ico('plus')}</button>
+      </div>
+      ${(it.checklist || []).length ? (it.checklist || []).map(c => `
+        <label class="list-row" style="cursor:pointer">
+          <input type="checkbox" ${c.done ? 'checked' : ''} style="width:19px;height:19px;min-height:auto;flex:none;accent-color:var(--accent)"
+            data-act="toggleCheck" data-kind="${kind}" data-id="${id}" data-cid="${c.id}">
+          <span class="grow" style="font-size:13.5px;${c.done ? 'opacity:.5;text-decoration:line-through' : ''}">${esc(c.text)}</span>
+          <button class="iconbtn" style="width:30px;height:30px;border:none" data-act="delCheck" data-kind="${kind}" data-id="${id}" data-cid="${c.id}">${ico('x')}</button>
+        </label>`).join('')
+      : `<div class="dim" style="font-size:12.5px">Nada apuntado. Útil para "conseguir X" o "terminar el capítulo 4".</div>`}
+    </div>
+
+    <label class="field"><span class="label">Notas — dónde te quedaste</span>
+      <textarea placeholder="Me quedé en…" data-act="setField" data-kind="${kind}" data-id="${id}" data-f="notes">${esc(it.notes || '')}</textarea></label>
+
+    <div class="stack" style="gap:8px">
+      <button class="btn btn-primary btn-block" data-act="askItem" data-kind="${kind}" data-id="${id}">${ico('spark')}Preguntar a Claude sobre esto</button>
+      <a class="btn btn-block" href="${esc(guideURL)}" target="_blank" rel="noopener">${ico('link')}Buscar guía</a>
+      <button class="btn btn-block btn-danger" data-act="delItem" data-kind="${kind}" data-id="${id}">${ico('trash')}Borrar</button>
+    </div>
+  </div>`);
+}
+
+/* ==========================================================================
+   HOJA: CAPTURA MANUAL
+   ========================================================================== */
+function openManual(kind) {
+  const isBook = kind === 'book';
+  sheet(isBook ? 'Nuevo libro' : 'Nuevo juego', `
+  <div class="stack">
+    <label class="field"><span class="label">Título</span><input type="text" id="mTitle" placeholder="Obligatorio"></label>
+    ${isBook
+      ? `<div class="field-row">
+           <label class="field"><span class="label">Autor</span><input type="text" id="mAuthor"></label>
+           <label class="field"><span class="label">Páginas</span><input type="number" id="mPages" min="0"></label>
+         </div>`
+      : `<div class="field-row">
+           <label class="field"><span class="label">Plataforma</span><input type="text" id="mPlatform" placeholder="Switch"></label>
+           <label class="field"><span class="label">Duración (h)</span><input type="number" id="mHours" min="0"></label>
+         </div>`}
+    <label class="field"><span class="label">Saga (si aplica)</span><input type="text" id="mSeries"></label>
+    <label class="field"><span class="label">Estado</span>
+      <select id="mStatus">
+        <option value="backlog">Pendiente</option>
+        <option value="active">En curso</option>
+        <option value="done">${isBook ? 'Leído' : 'Terminado'}</option>
+      </select></label>
+    <button class="btn btn-primary btn-block" data-act="saveManual" data-kind="${kind}">Agregar</button>
+  </div>`, b => b.querySelector('#mTitle').focus());
+}
+
+function newItem(kind, data) {
+  const base = {
+    id: uid(), status: 'backlog', minutes: 0, tags: [], notes: '', checklist: [],
+    lastTouched: todayKey(), addedAt: todayKey(), timerStart: null, noTime: false,
+    ...data
+  };
+  if (kind === 'book') { base.currentPage = base.currentPage || 0; S.books.unshift(base); }
+  else { base.percent = base.percent || 0; S.games.unshift(base); }
+  save(true);
+  return base;
+}
+
+/* ==========================================================================
+   MAGIC: THE GATHERING
+   ========================================================================== */
+const MTG_FORMATS = ['Commander', 'Standard', 'Modern', 'Pioneer', 'Pauper', 'Legacy', 'Limited', 'Casual'];
+const COLOR_NAME = { W: 'Blanco', U: 'Azul', B: 'Negro', R: 'Rojo', G: 'Verde', C: 'Incoloro' };
+
+function deckStats(d) {
+  const cards = d.cards || [];
+  const total = cards.reduce((a, c) => a + c.qty, 0);
+  // el valor cuenta solo lo que realmente tienes; las proxies se contabilizan aparte
+  const value = cards.filter(c => !c.proxy).reduce((a, c) => a + c.qty * (c.price || 0), 0);
+  const proxyQty = cards.filter(c => c.proxy).reduce((a, c) => a + c.qty, 0);
+  const proxyValue = cards.filter(c => c.proxy).reduce((a, c) => a + c.qty * (c.price || 0), 0);
+  const curve = [0, 0, 0, 0, 0, 0, 0, 0];
+  const colors = { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 };
+  const types = {};
+  cards.forEach(c => {
+    const isLand = /land/i.test(c.typeLine || '');
+    if (!isLand) curve[clamp(Math.floor(c.cmc || 0), 0, 7)] += c.qty;
+    if (!c.colors || !c.colors.length) colors.C += c.qty;
+    else c.colors.forEach(k => colors[k] = (colors[k] || 0) + c.qty);
+    const t = (c.type || 'Otro').split(' ').pop();
+    types[t] = (types[t] || 0) + c.qty;
+  });
+  const ms = S.matches.filter(m => m.deckId === d.id);
+  const w = ms.filter(m => m.result === 'W').length;
+  const l = ms.filter(m => m.result === 'L').length;
+  const dr = ms.filter(m => m.result === 'D').length;
+  const avgCmc = (() => {
+    const nl = cards.filter(c => !/land/i.test(c.typeLine || ''));
+    const n = nl.reduce((a, c) => a + c.qty, 0);
+    return n ? (nl.reduce((a, c) => a + c.qty * (c.cmc || 0), 0) / n).toFixed(2) : '0.00';
+  })();
+  return {
+    total, value, proxyQty, proxyValue, curve, colors, types,
+    w, l, d: dr, plays: ms.length, avgCmc,
+    winrate: (w + l) ? Math.round(w / (w + l) * 100) : null
+  };
+}
+
+function colorBar(colors) {
+  const tot = Object.values(colors).reduce((a, b) => a + b, 0) || 1;
+  return `<div class="colorbar">${Object.entries(colors).filter(([, v]) => v > 0)
+    .map(([k, v]) => `<i style="width:${v / tot * 100}%;background:var(--mtg-${k.toLowerCase()})" title="${COLOR_NAME[k]}: ${v}"></i>`).join('')}</div>`;
+}
+function pipRow(colors) {
+  const on = Object.entries(colors).filter(([k, v]) => v > 0 && k !== 'C').map(([k]) => k);
+  if (!on.length) return '<span class="dim" style="font-size:12px">Incoloro</span>';
+  return `<span class="row" style="gap:3px">${on.map(k =>
+    `<i style="width:12px;height:12px;border-radius:50%;background:var(--mtg-${k.toLowerCase()});display:block" title="${COLOR_NAME[k]}"></i>`).join('')}</span>`;
+}
+
+function viewMagic() {
+  const tab = S.ui.magicTab || 'decks';
+  return `
+  <div class="stack-lg" style="padding-top:18px">
+    <div class="row-between">
+      <h1>Magic</h1>
+      <button class="btn btn-primary btn-sm" data-act="${tab === 'coleccion' ? 'addCard' : tab === 'partidas' ? 'addMatch' : 'addDeck'}">
+        ${ico('plus')}${tab === 'coleccion' ? 'Carta' : tab === 'partidas' ? 'Partida' : 'Deck'}</button>
+    </div>
+    ${netBanner()}
+    <div class="tabs" role="tablist">
+      ${[['decks', 'Decks'], ['partidas', 'Partidas'], ['coleccion', 'Colección']].map(([k, l]) =>
+    `<button role="tab" aria-selected="${tab === k}" data-act="tab" data-kindtab="magicTab" data-v="${k}">${l}</button>`).join('')}
+    </div>
+    ${tab === 'decks' ? magicDecks() : tab === 'partidas' ? magicMatches() : magicCollection()}
+  </div>`;
+}
+
+function magicDecks() {
+  if (!S.decks.length) return `<div class="card"><div class="empty">${ico('magic', 1.5)}
+    <p>Sin decks todavía.<br>Puedes pegar una lista completa y se resuelve sola.</p>
+    <button class="btn btn-primary" data-act="addDeck">${ico('plus')}Crear deck</button></div></div>`;
+  return `<div class="stack">${S.decks.map(d => {
+    const s = deckStats(d);
+    return `<button class="card stripe tint-magic" style="width:100%;text-align:left;display:block" data-act="openDeck" data-id="${d.id}">
+      <div class="row-between" style="align-items:flex-start">
+        <div class="grow">
+          <h3>${esc(d.name)}</h3>
+          <div class="dim" style="font-size:12.5px;margin-top:3px">${esc(d.format)}${d.commander ? ' · ' + esc(d.commander) : ''}</div>
+        </div>
+        ${pipRow(s.colors)}
+      </div>
+      <div style="margin-top:11px">${colorBar(s.colors)}</div>
+      <div class="row" style="gap:14px;margin-top:11px;flex-wrap:wrap">
+        <span class="dim num" style="font-size:12px">${s.total} cartas</span>
+        <span class="dim num" style="font-size:12px">${fmtMoney(s.value)}</span>
+        <span class="dim num" style="font-size:12px">CMC ${s.avgCmc}</span>
+        ${s.winrate !== null ? `<span class="num" style="font-size:12px;color:${s.winrate >= 50 ? 'var(--good)' : 'var(--text-3)'}">${s.winrate}% · ${s.w}-${s.l}</span>` : ''}
+      </div>
+    </button>`;
+  }).join('')}</div>`;
+}
+
+function openDeck(id) {
+  const d = S.decks.find(x => x.id === id); if (!d) return;
+  const s = deckStats(d);
+  const maxCurve = Math.max(1, ...s.curve);
+  const ms = S.matches.filter(m => m.deckId === d.id).slice(-6).reverse();
+  const byType = Object.entries(s.types).sort((a, b) => b[1] - a[1]);
+
+  sheet(d.name, `
+  <div class="stack-lg">
+    <div class="card-flat">
+      <div class="statgrid">
+        <div class="stat"><b>${s.total}</b><span>cartas</span></div>
+        <div class="stat"><b>${fmtMoney(s.value).replace('$', '')}<span style="font-size:12px"> usd</span></b><span>${s.proxyQty ? 'lo que tienes' : 'valor'}</span></div>
+        <div class="stat"><b>${s.winrate !== null ? s.winrate + '%' : '—'}</b><span>victorias</span></div>
+      </div>
+      <div style="margin-top:12px">${colorBar(s.colors)}</div>
+      ${s.proxyQty ? `<div class="row-between" style="margin-top:13px;padding-top:12px;border-top:1px solid var(--border-soft)">
+        <span class="chip chip-xs chip-magic">${s.proxyQty} proxy${s.proxyQty === 1 ? '' : 's'}</span>
+        <span class="dim num" style="font-size:12px">${fmtMoney(s.proxyValue)} para comprarlas de verdad</span>
+      </div>` : ''}
+    </div>
+
+    <div>
+      <div class="row-between" style="margin-bottom:10px">
+        <span class="label">Curva de maná</span><span class="dim num" style="font-size:12px">promedio ${s.avgCmc}</span>
+      </div>
+      <div class="curve">
+        ${s.curve.map((v, i) => `<div>
+          <span class="cl">${v || ''}</span>
+          <i class="cb" style="height:${v / maxCurve * 100}%"></i>
+          <span class="cl">${i === 7 ? '7+' : i}</span></div>`).join('')}
+      </div>
+    </div>
+
+    ${byType.length ? `<div>
+      <div class="label" style="margin-bottom:8px">Composición</div>
+      <div class="chips">${byType.map(([t, n]) => `<span class="chip chip-xs">${esc(t)} <b class="num">${n}</b></span>`).join('')}</div>
+    </div>` : ''}
+
+    <div class="field-row">
+      <label class="field"><span class="label">Formato</span>
+        <select data-act="setDeck" data-id="${id}" data-f="format">
+          ${MTG_FORMATS.map(f => `<option ${d.format === f ? 'selected' : ''}>${f}</option>`).join('')}
+        </select></label>
+      <label class="field"><span class="label">Comandante</span>
+        <input type="text" value="${esc(d.commander || '')}" data-act="setDeck" data-id="${id}" data-f="commander"></label>
+    </div>
+
+    <div>
+      <div class="row-between" style="margin-bottom:8px">
+        <span class="label">Cartas (${(d.cards || []).length})</span>
+        <button class="btn btn-ghost btn-sm" data-act="pasteList" data-id="${id}">Pegar lista</button>
+      </div>
+      ${(d.cards || []).length ? `<div class="scrollx"><table class="data">
+        <thead><tr><th></th><th>Carta</th><th title="Márcala si la que juegas es proxy">Proxy</th><th style="text-align:right">USD</th><th></th></tr></thead>
+        <tbody>${d.cards.map(c => `<tr${c.proxy ? ' class="is-proxy"' : ''}>
+          <td class="num dim">${c.qty}×</td>
+          <td><a href="${esc(c.url || '#')}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${esc(c.name)}</a>
+            <div class="dim" style="font-size:11px">${esc(c.type || '')}${c.cmc !== undefined && c.cmc !== null ? ` · CMC ${c.cmc}` : ''}</div></td>
+          <td style="text-align:center">
+            <input type="checkbox" ${c.proxy ? 'checked' : ''} aria-label="Proxy"
+              style="width:19px;height:19px;min-height:auto;accent-color:var(--magic)"
+              data-act="toggleProxy" data-id="${id}" data-cn="${esc(c.name)}"></td>
+          <td class="num" style="text-align:right">${c.price ? `<span${c.proxy ? ' style="opacity:.45;text-decoration:line-through"' : ''}>${fmtMoney(c.qty * c.price).replace('$', '')}</span>` : '—'}</td>
+          <td><button class="iconbtn" style="width:28px;height:28px;border:none" data-act="delCard" data-id="${id}" data-cn="${esc(c.name)}">${ico('x')}</button></td>
+        </tr>`).join('')}</tbody></table></div>
+        <div class="dim" style="font-size:11.5px;margin-top:9px;line-height:1.5">
+          Lo marcado como proxy no cuenta en el valor del deck. Al pegar una lista puedes escribir
+          <code style="font-family:var(--font-mono);font-size:11px">1 Mana Crypt *proxy*</code> y se marca solo.</div>`
+      : `<div class="dim" style="font-size:12.5px">Sin cartas. Pega tu lista y Scryfall llena precios, colores y curva.</div>`}
+    </div>
+
+    ${ms.length ? `<div>
+      <div class="label" style="margin-bottom:8px">Últimas partidas</div>
+      ${ms.map(m => `<div class="list-row">
+        <span class="pill ${m.result === 'W' ? 'pill-active' : ''}">${m.result === 'W' ? 'Ganada' : m.result === 'L' ? 'Perdida' : 'Empate'}</span>
+        <span class="grow" style="font-size:13px">${esc(m.opponent || 'Rival sin anotar')}</span>
+        <span class="dim num" style="font-size:11.5px">${esc(m.date)}</span>
+      </div>`).join('')}
+    </div>` : ''}
+
+    <label class="field"><span class="label">Notas</span>
+      <textarea data-act="setDeck" data-id="${id}" data-f="notes" placeholder="Qué quiero que haga este deck…">${esc(d.notes || '')}</textarea></label>
+
+    <div class="stack" style="gap:8px">
+      <button class="btn btn-primary btn-block" data-act="addMatch" data-deck="${id}">${ico('plus')}Registrar partida</button>
+      <button class="btn btn-block" data-act="askDeck" data-id="${id}">${ico('spark')}Pedirle consejo a Claude</button>
+      <button class="btn btn-block btn-danger" data-act="delDeck" data-id="${id}">${ico('trash')}Borrar deck</button>
+    </div>
+  </div>`);
+}
+
+function magicMatches() {
+  const ms = [...S.matches].reverse();
+  if (!ms.length) return `<div class="card"><div class="empty">${ico('magic', 1.5)}
+    <p>Sin partidas registradas.<br>Con unas cuantas ya sabrás contra qué pierdes.</p>
+    <button class="btn btn-primary" data-act="addMatch">${ico('plus')}Registrar partida</button></div></div>`;
+
+  const w = ms.filter(m => m.result === 'W').length, l = ms.filter(m => m.result === 'L').length;
+  const byOpp = {};
+  ms.forEach(m => {
+    const k = m.opponent || 'Sin anotar';
+    byOpp[k] = byOpp[k] || { w: 0, l: 0 };
+    if (m.result === 'W') byOpp[k].w++; else if (m.result === 'L') byOpp[k].l++;
+  });
+  const matchups = Object.entries(byOpp).filter(([, v]) => v.w + v.l >= 2)
+    .sort((a, b) => (a[1].w / (a[1].w + a[1].l)) - (b[1].w / (b[1].w + b[1].l)));
+
+  return `
+  <div class="stack">
+    <div class="card-flat">
+      <div class="statgrid">
+        <div class="stat"><b>${ms.length}</b><span>partidas</span></div>
+        <div class="stat"><b>${w}-${l}</b><span>récord</span></div>
+        <div class="stat"><b>${(w + l) ? Math.round(w / (w + l) * 100) : 0}<span style="font-size:12px">%</span></b><span>victorias</span></div>
+      </div>
+    </div>
+
+    ${matchups.length ? `<div class="card">
+      <div class="label" style="margin-bottom:10px">Cómo te va contra cada cosa</div>
+      ${matchups.map(([k, v]) => {
+        const r = Math.round(v.w / (v.w + v.l) * 100);
+        return `<div style="padding:7px 0">
+          <div class="row-between" style="margin-bottom:5px">
+            <span style="font-size:13px">${esc(k)}</span>
+            <span class="num" style="font-size:12px;color:${r >= 50 ? 'var(--good)' : 'var(--crit)'}">${v.w}-${v.l}</span>
+          </div>
+          <div class="bar"><i style="width:${r}%;background:${r >= 50 ? 'var(--good)' : 'var(--crit)'}"></i></div>
+        </div>`;
+      }).join('')}
+    </div>` : ''}
+
+    <div class="card">
+      <div class="label" style="margin-bottom:6px">Historial</div>
+      ${ms.slice(0, 40).map(m => {
+        const d = S.decks.find(x => x.id === m.deckId);
+        return `<div class="list-row">
+          <span class="pill ${m.result === 'W' ? 'pill-active' : m.result === 'L' ? 'pill-dropped' : 'pill-paused'}">${m.result === 'W' ? 'G' : m.result === 'L' ? 'P' : 'E'}</span>
+          <span class="grow" style="min-width:0">
+            <b style="font-size:13px;display:block">${esc(d ? d.name : 'Deck borrado')}</b>
+            <span class="dim" style="font-size:11.5px">vs ${esc(m.opponent || '—')}${m.games ? ' · ' + esc(m.games) : ''}</span>
+          </span>
+          <span class="dim num" style="font-size:11px">${esc(m.date)}</span>
+          <button class="iconbtn" style="width:28px;height:28px;border:none" data-act="delMatch" data-id="${m.id}">${ico('x')}</button>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+function magicCollection() {
+  const c = S.collection;
+  if (!c.length) return `<div class="card"><div class="empty">${ico('magic', 1.5)}
+    <p>Colección vacía.<br>Busca una carta y agrégala con cantidad.</p>
+    <button class="btn btn-primary" data-act="addCard">${ico('plus')}Agregar carta</button></div></div>`;
+  const total = c.reduce((a, x) => a + x.qty, 0);
+  const value = c.reduce((a, x) => a + x.qty * (x.price || 0), 0);
+  const sorted = [...c].sort((a, b) => (b.qty * b.price) - (a.qty * a.price));
+  return `
+  <div class="stack">
+    <div class="card-flat">
+      <div class="statgrid">
+        <div class="stat"><b>${total}</b><span>cartas</span></div>
+        <div class="stat"><b>${c.length}</b><span>distintas</span></div>
+        <div class="stat"><b>${fmtMoney(value).replace('$', '')}<span style="font-size:12px"> usd</span></b><span>valor</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="row-between" style="margin-bottom:6px">
+        <span class="label">Tus cartas</span>
+        <button class="btn btn-ghost btn-sm" data-act="refreshPrices">Actualizar precios</button>
+      </div>
+      <div class="scrollx"><table class="data">
+        <thead><tr><th></th><th>Carta</th><th>Set</th><th style="text-align:right">USD</th><th></th></tr></thead>
+        <tbody>${sorted.map(x => `<tr>
+          <td class="num dim">${x.qty}×</td>
+          <td><a href="${esc(x.url || '#')}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${esc(x.name)}</a>
+            ${x.foil ? '<span class="chip chip-xs chip-magic" style="margin-left:5px">foil</span>' : ''}</td>
+          <td class="dim num" style="font-size:11px">${esc(x.set)}</td>
+          <td class="num" style="text-align:right">${x.price ? fmtMoney(x.qty * x.price).replace('$', '') : '—'}</td>
+          <td><button class="iconbtn" style="width:28px;height:28px;border:none" data-act="delColl" data-id="${x.id}">${ico('x')}</button></td>
+        </tr>`).join('')}</tbody></table></div>
+    </div>
+  </div>`;
+}
+function afterMagic() { }
+
+/* ---------- hojas de Magic ---------- */
+function openAddDeck() {
+  sheet('Nuevo deck', `
+  <div class="stack">
+    <label class="field"><span class="label">Nombre</span><input type="text" id="dName" placeholder="Atraxa Superamigos"></label>
+    <div class="field-row">
+      <label class="field"><span class="label">Formato</span>
+        <select id="dFormat">${MTG_FORMATS.map(f => `<option>${f}</option>`).join('')}</select></label>
+      <label class="field"><span class="label">Comandante</span><input type="text" id="dCmd" placeholder="Opcional"></label>
+    </div>
+    <label class="field"><span class="label">Lista — opcional, pégala tal cual</span>
+      <textarea id="dList" placeholder="1 Sol Ring&#10;1 Arcane Signet&#10;4 Lightning Bolt&#10;…" style="min-height:130px;font-family:var(--font-mono);font-size:12.5px"></textarea></label>
+    <div class="dim" style="font-size:11.5px;line-height:1.45">Acepta "1 Sol Ring", "1x Sol Ring" o solo el nombre. Scryfall llena precio, colores y curva.</div>
+    <button class="btn btn-primary btn-block" data-act="saveDeck">Crear deck</button>
+  </div>`, b => b.querySelector('#dName').focus());
+}
+
+function openPasteList(id) {
+  sheet('Pegar lista', `
+  <div class="stack">
+    <label class="field"><span class="label">Pega tu decklist</span>
+      <textarea id="pList" style="min-height:200px;font-family:var(--font-mono);font-size:12.5px" placeholder="1 Sol Ring&#10;1 Arcane Signet"></textarea></label>
+    <label class="row" style="gap:10px;cursor:pointer">
+      <input type="checkbox" id="pReplace" style="width:20px;height:20px;min-height:auto;flex:none;accent-color:var(--accent)">
+      <span style="font-size:13.5px">Reemplazar la lista actual en vez de sumar</span></label>
+    <button class="btn btn-primary btn-block" data-act="doPaste" data-id="${id}">Resolver con Scryfall</button>
+    <div id="pStatus"></div>
+  </div>`, b => b.querySelector('#pList').focus());
+}
+
+function parseList(text) {
+  return text.split('\n').map(l => l.trim()).filter(l => l && !/^(deck|sideboard|commander|maybeboard)\b/i.test(l))
+    .map(l => {
+      // marcas de proxy: *proxy*, [proxy], (proxy), #proxy o "proxy" al final
+      const proxy = /(\*proxy\*|\[proxy\]|\(proxy\)|#proxy|\bproxy\s*$)/i.test(l);
+      l = l.replace(/(\*proxy\*|\[proxy\]|\(proxy\)|#proxy|\bproxy\s*$)/ig, '').trim();
+      const m = l.match(/^(\d+)\s*[xX]?\s+(.+)$/);
+      const qty = m ? parseInt(m[1]) : 1;
+      const name = (m ? m[2] : l)
+        .replace(/\s*\([A-Za-z0-9]{3,5}\)\s*\d*\s*$/, '')   // código de set al final
+        .replace(/\s*\/\/.*$/, '')                           // comentarios
+        .trim();
+      return { qty, name, proxy };
+    }).filter(x => x.name.length > 1);
+}
+
+function openAddMatch(deckId) {
+  if (!S.decks.length) { toast('Primero crea un deck'); return; }
+  sheet('Registrar partida', `
+  <div class="stack">
+    <label class="field"><span class="label">Tu deck</span>
+      <select id="wDeck">${S.decks.map(d => `<option value="${d.id}" ${d.id === deckId ? 'selected' : ''}>${esc(d.name)}</option>`).join('')}</select></label>
+    <label class="field"><span class="label">Contra qué jugaste</span>
+      <input type="text" id="wOpp" placeholder="Aristócratas, Krenko, azul-blanco control…" list="oppList">
+      <datalist id="oppList">${[...new Set(S.matches.map(m => m.opponent).filter(Boolean))].map(o => `<option>${esc(o)}</option>`).join('')}</datalist></label>
+    <div>
+      <div class="label" style="margin-bottom:8px">Resultado</div>
+      <div class="chips" id="wResult">
+        <button class="chip on" data-r="W">Gané</button>
+        <button class="chip" data-r="L">Perdí</button>
+        <button class="chip" data-r="D">Empate</button>
+      </div>
+    </div>
+    <div class="field-row">
+      <label class="field"><span class="label">Marcador</span><input type="text" id="wGames" placeholder="2-1"></label>
+      <label class="field"><span class="label">Fecha</span><input type="date" id="wDate" value="${todayKey()}"></label>
+    </div>
+    <label class="field"><span class="label">Qué pasó</span>
+      <textarea id="wNotes" placeholder="Me inundé, o no encontré remoción…" style="min-height:70px"></textarea></label>
+    <button class="btn btn-primary btn-block" data-act="saveMatch">Guardar</button>
+  </div>`, b => {
+    b.querySelector('#wResult').addEventListener('click', e => {
+      const btn = e.target.closest('[data-r]'); if (!btn) return;
+      b.querySelectorAll('#wResult .chip').forEach(c => c.classList.remove('on'));
+      btn.classList.add('on');
+    });
+  });
+}
+
+function openAddCard() {
+  sheet('Agregar carta', `
+  <div class="stack">
+    <label class="field"><span class="label">Buscar en Scryfall</span>
+      <div class="row"><input type="search" id="cq" class="grow" placeholder="Sol Ring" autocomplete="off">
+      <button class="btn" data-act="doCardSearch">${ico('search')}</button></div></label>
+    <div id="cres"></div>
+  </div>`, b => {
+    const q = b.querySelector('#cq'); q.focus();
+    let t; q.addEventListener('input', () => { clearTimeout(t); t = setTimeout(doCardSearch, 420); });
+    q.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); doCardSearch(); } });
+  });
+}
+let cardCache = [];
+async function doCardSearch() {
+  const q = ($('#cq') || {}).value?.trim(); const box = $('#cres');
+  if (!box || !q || q.length < 2) return;
+  box.innerHTML = `<div class="dim" style="font-size:13.5px">Buscando…</div>`;
+  try {
+    cardCache = await API.searchCards(q);
+    if (!cardCache.length) { box.innerHTML = `<div class="dim" style="font-size:13.5px">Sin resultados.</div>`; return; }
+    box.innerHTML = `<div class="searchres">${cardCache.map((c, i) => `
+      <button data-act="pickCard" data-i="${i}">
+        ${c.img ? `<img src="${esc(c.img)}" alt="" style="width:44px;height:62px;object-fit:cover;border-radius:5px;flex:none">` : ''}
+        <span class="grow"><b style="display:block;font-size:14px">${esc(c.name)}</b>
+        <span class="dim" style="font-size:12px;display:block;margin-top:2px">${esc(c.setName)} · ${esc(c.rarity)} · ${c.price ? fmtMoney(c.price) : 'sin precio'}</span></span>
+      </button>`).join('')}</div>`;
+  } catch (e) { box.innerHTML = `<div class="banner">${ico('info')}<div>No se pudo conectar a Scryfall.</div></div>`; }
+}
+
+/* ==========================================================================
+   VISTA: YO — perfil, estadísticas, ajustes, respaldo
+   ========================================================================== */
+function viewYo() {
+  const p = S.profile;
+  const totalMin = S.sessions.reduce((a, s) => a + s.min, 0);
+  const doneG = S.games.filter(g => g.status === 'done').length;
+  const doneB = S.books.filter(b => b.status === 'done').length;
+  const dropped = S.games.filter(g => g.status === 'dropped').length + S.books.filter(b => b.status === 'dropped').length;
+
+  return `
+  <div class="stack-lg" style="padding-top:18px">
+    <h1>Yo</h1>
+
+    <div class="card-flat">
+      <div class="statgrid">
+        <div class="stat"><b>${(totalMin / 60).toFixed(0)}<span style="font-size:12px"> h</span></b><span>registradas</span></div>
+        <div class="stat"><b>${doneG + doneB}</b><span>completados</span></div>
+        <div class="stat"><b>${streak()}</b><span>racha</span></div>
+      </div>
+      <div style="margin-top:16px">
+        <div class="label" style="margin-bottom:8px">Últimas 16 semanas</div>
+        ${heatmapHTML()}
+      </div>
+    </div>
+
+    <section>
+      <div class="section-head"><h2>Tu perfil de gusto</h2></div>
+      <div class="card">
+        ${p.done ? `
+          <div class="muted" style="font-size:13.5px;line-height:1.55">
+            Con esto le pongo un número de compatibilidad a cada juego y libro.</div>
+          <div class="chips" style="margin-top:11px">
+            ${(p.answers.generos || []).slice(0, 6).map(g => `<span class="chip chip-xs chip-games">${tagLabel(g)}</span>`).join('')}
+            ${(p.answers.mecanicas || []).slice(0, 5).map(g => `<span class="chip chip-xs">${tagLabel(g)}</span>`).join('')}
+          </div>
+          <button class="btn btn-block btn-sm" style="margin-top:13px" data-act="quiz">Volver a contestarlo</button>`
+      : `<div class="empty" style="padding:16px 4px">
+            ${ico('spark', 1.6)}
+            <p><b style="color:var(--text)">Todavía no lo has llenado.</b><br>
+            Son unas preguntas rápidas, una sola vez. Después la app puede decirte qué tanto te va a gustar cada cosa.</p>
+            <button class="btn btn-primary" data-act="quiz">Contestar ahora</button>
+          </div>`}
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><h2>El asistente</h2></div>
+      <div class="stack">
+        <div class="card">
+          <h3>Con tu suscripción de Claude</h3>
+          <div class="muted" style="font-size:13px;margin-top:5px;line-height:1.55">
+            Gratis. Los botones de "Preguntar a Claude" arman el contexto y lo abren en tu app de Claude.
+            No necesitas configurar nada.</div>
+          <button class="btn btn-sm btn-block" style="margin-top:12px" data-act="askBacklog">${ico('spark')}Probarlo con mi backlog</button>
+        </div>
+        <div class="card">
+          <h3>Chat dentro de la app</h3>
+          <div class="muted" style="font-size:13px;margin-top:5px;line-height:1.55">
+            Opcional, y se cobra aparte de tu suscripción. Con una llave de API puedes preguntar sin salir de aquí.
+            La llave se queda en este teléfono.</div>
+          <label class="field" style="margin-top:12px"><span class="label">Llave de API de Anthropic</span>
+            <input type="text" placeholder="sk-ant-…" value="${esc(S.settings.anthropicKey || '')}" data-act="setSetting" data-f="anthropicKey"></label>
+          <label class="field" style="margin-top:10px"><span class="label">Modelo</span>
+            <select data-act="setSetting" data-f="model">
+              <option value="claude-haiku-4-5-20251001" ${S.settings.model === 'claude-haiku-4-5-20251001' ? 'selected' : ''}>Haiku 4.5 — el más barato</option>
+              <option value="claude-sonnet-5" ${S.settings.model === 'claude-sonnet-5' ? 'selected' : ''}>Sonnet 5 — más listo</option>
+            </select></label>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><h2>Catálogos</h2></div>
+      <div class="card">
+        <div class="muted" style="font-size:13px;line-height:1.55">
+          Libros (Open Library) y Magic (Scryfall) funcionan sin configurar nada.
+          Para que los juegos se llenen solos necesitas una llave gratis de RAWG.</div>
+        <label class="field" style="margin-top:12px"><span class="label">Llave de RAWG</span>
+          <input type="text" placeholder="Pégala aquí" value="${esc(S.settings.rawgKey || '')}" data-act="setSetting" data-f="rawgKey"></label>
+        <a class="btn btn-sm btn-block" style="margin-top:10px" href="https://rawg.io/apidocs" target="_blank" rel="noopener">${ico('link')}Conseguir una gratis</a>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><h2>Cómo se siente la app</h2></div>
+      <div class="card stack">
+        <label class="row-between" style="cursor:pointer">
+          <span class="grow" style="font-size:14px">Mostrar rachas y metas
+            <span class="dim" style="display:block;font-size:12px;margin-top:2px">Apágalo si te genera presión</span></span>
+          <input type="checkbox" ${S.settings.showStreaks ? 'checked' : ''} style="width:22px;height:22px;min-height:auto;flex:none;accent-color:var(--accent)"
+            data-act="setSetting" data-f="showStreaks" data-type="bool">
+        </label>
+        <div class="divider"></div>
+        <label class="field"><span class="label">Cuántas cosas mostrar en "En curso"</span>
+          <input type="number" min="1" max="10" value="${S.settings.calmLimit}" data-act="setSetting" data-f="calmLimit" data-type="num"></label>
+        <label class="field"><span class="label">Meta semanal (horas)</span>
+          <input type="number" min="0" step="0.5" value="${(S.settings.weeklyGoalMin / 60).toFixed(1)}" data-act="setSetting" data-f="weeklyGoalHours" data-type="hours"></label>
+        <label class="field"><span class="label">Avisarme de algo estancado después de (días)</span>
+          <input type="number" min="3" max="120" value="${S.settings.staleDays}" data-act="setSetting" data-f="staleDays" data-type="num"></label>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><h2>Tus datos</h2></div>
+      <div class="card stack" style="gap:9px">
+        <div class="muted" style="font-size:13px;line-height:1.55">
+          Todo vive en este teléfono, nada se sube a ningún lado.
+          Exporta de vez en cuando — es tu única red de seguridad.</div>
+        <button class="btn btn-block" data-act="goodreads">Traer libros desde Goodreads</button>
+        <div class="divider"></div>
+        <button class="btn btn-block" data-act="exportJSON">${ico('down')}Respaldo completo (JSON)</button>
+        <button class="btn btn-block" data-act="exportCSV">${ico('down')}Hoja de cálculo (CSV)</button>
+        <button class="btn btn-block" data-act="importJSON">Restaurar un respaldo</button>
+        <div class="divider"></div>
+        <button class="btn btn-block btn-danger" data-act="wipe">Borrar todo y empezar de cero</button>
+      </div>
+    </section>
+
+    ${dropped ? `<div class="dim" style="font-size:12px;text-align:center;padding-bottom:8px">
+      Has soltado ${dropped} cosa${dropped === 1 ? '' : 's'}. Eso también es avanzar.</div>` : ''}
+  </div>`;
+}
+
+function heatmapHTML() {
+  const cells = [];
+  const d = new Date();
+  d.setDate(d.getDate() - (d.getDay() === 0 ? 6 : d.getDay() - 1)); // lunes de esta semana
+  d.setDate(d.getDate() - 15 * 7);
+  for (let w = 0; w < 16; w++) {
+    for (let day = 0; day < 7; day++) {
+      const k = todayKey(d);
+      const m = minutesOn(k);
+      const l = m === 0 ? 0 : m < 30 ? 1 : m < 75 ? 2 : m < 150 ? 3 : 4;
+      cells.push(`<i data-l="${l}" title="${k}: ${m ? fmtMin(m) : 'nada'}"></i>`);
+      d.setDate(d.getDate() + 1);
+    }
+  }
+  return `<div class="heat">${cells.join('')}</div>`;
+}
+function afterYo() { }
+
+/* ==========================================================================
+   CUESTIONARIO DE GUSTO — una vez, y ya
+   ========================================================================== */
+function openQuiz() {
+  const a = S.profile.answers || {};
+  const group = (key, obj, title, hint) => `
+    <div>
+      <div class="label" style="margin-bottom:3px">${title}</div>
+      ${hint ? `<div class="dim" style="font-size:11.5px;margin-bottom:9px">${hint}</div>` : '<div style="height:9px"></div>'}
+      <div class="chips" data-quiz="${key}">
+        ${Object.entries(obj).map(([k, d]) =>
+    `<button class="chip ${(a[key] || []).includes(k) ? 'on' : ''}" data-qk="${k}">${d.label || d}</button>`).join('')}
+      </div>
+    </div>`;
+
+  sheet('Tu perfil de gusto', `
+  <div class="stack-lg">
+    <div class="muted" style="font-size:13.5px;line-height:1.55">
+      Contesta lo que te salga rápido, no lo pienses mucho. Puedes cambiarlo cuando quieras.
+    </div>
+
+    ${group('generos', TAX.generos, 'Géneros que disfrutas', 'Los que sean, sin límite')}
+    ${group('mecanicas', TAX.mecanicas, 'Qué te engancha de un juego')}
+    ${group('tonos', TAX.tonos, 'Qué ambiente prefieres')}
+
+    <div class="field-row">
+      <label class="field"><span class="label">Duración ideal</span>
+        <select id="qDur">
+          <option value="noimporta" ${a.duracion === 'noimporta' ? 'selected' : ''}>Me da igual</option>
+          <option value="corto" ${a.duracion === 'corto' ? 'selected' : ''}>Corto (menos de 15 h)</option>
+          <option value="medio" ${a.duracion === 'medio' ? 'selected' : ''}>Medio (15–45 h)</option>
+          <option value="largo" ${a.duracion === 'largo' ? 'selected' : ''}>Largo (45 h o más)</option>
+        </select></label>
+      <label class="field"><span class="label">Dificultad</span>
+        <select id="qDif">
+          <option value="media" ${a.dificultad === 'media' ? 'selected' : ''}>Equilibrada</option>
+          <option value="facil" ${a.dificultad === 'facil' ? 'selected' : ''}>Relajada</option>
+          <option value="dificil" ${a.dificultad === 'dificil' ? 'selected' : ''}>Que me exija</option>
+          <option value="igual" ${a.dificultad === 'igual' ? 'selected' : ''}>Me da igual</option>
+        </select></label>
+    </div>
+
+    ${group('vetos', TAX.vetos, 'Lo que prefieres evitar', 'Esto baja fuerte la compatibilidad')}
+
+    <label class="field"><span class="label">Tus juegos favoritos de siempre</span>
+      <input type="text" id="qFavG" placeholder="Hollow Knight, Chrono Trigger, Outer Wilds" value="${esc((S.profile.favGames || []).join(', '))}"></label>
+    <label class="field"><span class="label">Sagas que sigues pase lo que pase</span>
+      <input type="text" id="qFavS" placeholder="Zelda, Metroid, Fire Emblem" value="${esc((S.profile.favSagas || []).join(', '))}"></label>
+
+    <div class="divider"></div>
+
+    <div>
+      <div class="label" style="margin-bottom:9px">Géneros de libros</div>
+      <div class="chips" data-quiz="generosLibros">
+        ${GEN_BOOKS.map(g => `<button class="chip ${(a.generosLibros || []).includes(g) ? 'on' : ''}" data-qk="${esc(g)}">${g}</button>`).join('')}
+      </div>
+    </div>
+    <label class="field"><span class="label">Largo de libro que prefieres</span>
+      <select id="qDurL">
+        <option value="noimporta" ${a.duracionLibros === 'noimporta' ? 'selected' : ''}>Me da igual</option>
+        <option value="corto" ${a.duracionLibros === 'corto' ? 'selected' : ''}>Cortos (menos de 300 pág)</option>
+        <option value="medio" ${a.duracionLibros === 'medio' ? 'selected' : ''}>Medianos (200–550 pág)</option>
+        <option value="largo" ${a.duracionLibros === 'largo' ? 'selected' : ''}>Ladrillos (450+ pág)</option>
+      </select></label>
+
+    <button class="btn btn-primary btn-block" data-act="saveQuiz">Guardar perfil</button>
+  </div>`, body => {
+    body.addEventListener('click', e => {
+      const btn = e.target.closest('[data-qk]'); if (!btn) return;
+      btn.classList.toggle('on');
+    });
+  });
+}
+
+/* ==========================================================================
+   CHAT INTEGRADO (opcional, con llave de API)
+   ========================================================================== */
+async function callClaude(prompt, onChunk) {
+  const key = (S.settings.anthropicKey || '').trim();
+  if (!key) throw new Error('Falta la llave de API');
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: S.settings.model || 'claude-haiku-4-5-20251001',
+      max_tokens: 1200,
+      system: 'Eres el asistente de Bitácora, la app personal de hobbies de Raul. Raul tiene TDAH y se satura con su backlog: sé breve, concreto y decidido. Cuando te pida elegir, elige UNA cosa y di por qué en pocas líneas — nunca devuelvas listas largas de opciones. Nunca des spoilers más allá del punto donde va. Responde siempre en español mexicano, cálido y directo.',
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  if (!r.ok) {
+    const t = await r.text().catch(() => '');
+    if (r.status === 401) throw new Error('La llave de API no es válida');
+    if (r.status === 429) throw new Error('Demasiadas peticiones, espera un momento');
+    if (r.status === 400 && /credit/i.test(t)) throw new Error('Tu cuenta de API no tiene saldo');
+    throw new Error(`Error ${r.status}`);
+  }
+  const j = await r.json();
+  return (j.content || []).filter(c => c.type === 'text').map(c => c.text).join('\n');
+}
+
+async function bridgeInline() {
+  const txt = ($('#bridgeTxt') || {}).value || '';
+  const box = $('#bridgeAnswer'); if (!box) return;
+  box.innerHTML = `<div class="card-flat" style="margin-top:12px"><div class="dim" style="font-size:13.5px">Pensando…</div></div>`;
+  try {
+    const answer = await callClaude(txt);
+    box.innerHTML = `<div class="card-flat" style="margin-top:12px">
+      <div class="eyebrow" style="margin-bottom:8px">Claude</div>
+      <div style="font-size:14px;line-height:1.6;white-space:pre-wrap">${esc(answer)}</div></div>`;
+  } catch (e) {
+    box.innerHTML = `<div class="banner" style="margin-top:12px">${ico('info')}<div>${esc(e.message)}</div></div>`;
+  }
+}
+
+/* ==========================================================================
+   RESPALDO
+   ========================================================================== */
+function download(filename, text, mime = 'application/json') {
+  const blob = new Blob([text], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+}
+async function saveFile(filename, text, mime) {
+  // en un artifact publicado, la descarga directa está bloqueada: usamos la capacidad del visor
+  try {
+    const d = window.claude && await window.claude.use('downloads');
+    if (d) { await d.save({ filename, data: text }); toast('Guardado'); return; }
+  } catch (e) { }
+  download(filename, text, mime);
+  toast('Descargando ' + filename);
+}
+function exportJSON() {
+  saveFile(`bitacora-${todayKey()}.json`, JSON.stringify(S, null, 2), 'application/json');
+}
+function exportCSV() {
+  const rows = [['tipo', 'titulo', 'autor_plataforma', 'saga', 'estado', 'avance_pct', 'horas', 'valoracion', 'etiquetas', 'agregado', 'ultima_vez']];
+  S.games.forEach(g => rows.push(['juego', g.title, g.platform || '', g.series || '', STATUS_LABEL[g.status],
+    itemPercent({ ...g, kind: 'game' }), ((g.minutes || 0) / 60).toFixed(1), g.rating || '',
+    (g.tags || []).map(tagLabel).join('|'), g.addedAt || '', g.lastTouched || '']));
+  S.books.forEach(b => rows.push(['libro', b.title, b.author || '', b.series ? b.series + (b.seriesIndex ? ` #${b.seriesIndex}` : '') : '', STATUS_LABEL[b.status],
+    itemPercent({ ...b, kind: 'book' }), ((b.minutes || 0) / 60).toFixed(1), b.rating || '',
+    (b.subjects || []).slice(0, 6).join('|'), b.addedAt || '', b.lastTouched || '']));
+  S.decks.forEach(d => {
+    const s = deckStats(d);
+    rows.push(['deck', d.name, d.format, d.commander || '', `${s.w}-${s.l}`, s.winrate ?? '',
+      '', '', `${s.total} cartas|${s.proxyQty} proxy|${fmtMoney(s.value)}`, d.createdAt || '', '']);
+  });
+  S.collection.forEach(c => rows.push(['carta', c.name, c.setName || '', '', `x${c.qty}`, '', '', '',
+    c.foil ? 'foil' : '', c.addedAt || '', '']));
+  const csv = rows.map(r => r.map(v => {
+    const s = String(v ?? '');
+    return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  }).join(',')).join('\n');
+  saveFile(`bitacora-${todayKey()}.csv`, '﻿' + csv, 'text/csv');
+}
+function importJSON() {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'application/json,.json';
+  inp.onchange = () => {
+    const f = inp.files[0]; if (!f) return;
+    const fr = new FileReader();
+    fr.onload = () => {
+      try {
+        const data = JSON.parse(fr.result);
+        if (!data || typeof data !== 'object' || !('games' in data)) throw new Error('formato');
+        if (!confirm('Esto reemplaza todo lo que tienes ahora. ¿Seguro?')) return;
+        S = deepDefault(data, structuredClone(BLANK));
+        save(true); applyTheme(); render(); toast('Respaldo restaurado');
+      } catch (e) { toast('Ese archivo no es un respaldo válido'); }
+    };
+    fr.readAsText(f);
+  };
+  inp.click();
+}
+
+/* ==========================================================================
+   IMPORTAR DESDE GOODREADS
+   Goodreads cerró su API pública en 2020 y no da llaves nuevas, así que la vía
+   real es su exportación a CSV — que sigue funcionando y trae más que la API.
+   El lector busca las columnas por nombre, así que aguanta que Goodreads
+   cambie el orden o quite alguna.
+   ========================================================================== */
+function parseCSV(text) {
+  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);   // BOM
+  const rows = []; let row = [], field = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) {
+      if (c === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else q = false; }
+      else field += c;
+    } else if (c === '"') q = true;
+    else if (c === ',') { row.push(field); field = ''; }
+    else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+    else if (c !== '\r') field += c;
+  }
+  if (field.length || row.length) { row.push(field); rows.push(row); }
+  return rows.filter(r => r.length > 1 || (r[0] || '').trim());
+}
+
+/* "El nombre del viento (Crónica del asesino de reyes, #1)" → título + saga + número */
+function splitSeries(raw) {
+  const m = raw.match(/^(.*?)\s*\(([^()]+?),?\s*#([\d.]+)\s*\)\s*$/);
+  if (m) return { title: m[1].trim(), series: m[2].trim().replace(/,$/, ''), seriesIndex: parseFloat(m[3]) };
+  return { title: raw.trim(), series: '', seriesIndex: null };
+}
+
+const GR_SHELF = { 'read': 'done', 'currently-reading': 'active', 'to-read': 'backlog' };
+
+function readGoodreads(text) {
+  const rows = parseCSV(text);
+  if (!rows.length) throw new Error('El archivo está vacío.');
+  const head = rows[0].map(h => h.trim().toLowerCase());
+  const col = name => head.indexOf(name.toLowerCase());
+  const iTitle = col('Title');
+  if (iTitle < 0) throw new Error('No parece una exportación de Goodreads: no encuentro la columna "Title".');
+
+  const idx = {
+    title: iTitle, author: col('Author'), pages: col('Number of Pages'),
+    myRating: col('My Rating'), shelf: col('Exclusive Shelf'), shelves: col('Bookshelves'),
+    review: col('My Review'), dateRead: col('Date Read'), dateAdded: col('Date Added'),
+    isbn: col('ISBN'), isbn13: col('ISBN13'), year: col('Year Published')
+  };
+  const g = (r, k) => idx[k] >= 0 ? (r[idx[k]] || '').trim() : '';
+  const cleanISBN = v => (v || '').replace(/[="\s]/g, '');
+  const toDate = v => { const d = new Date(v); return isNaN(d) ? '' : todayKey(d); };
+
+  const out = [];
+  for (const r of rows.slice(1)) {
+    const rawTitle = g(r, 'title');
+    if (!rawTitle) continue;
+    const { title, series, seriesIndex } = splitSeries(rawTitle);
+    const shelf = g(r, 'shelf').toLowerCase();
+    const status = GR_SHELF[shelf] || 'backlog';
+    const pages = parseInt(g(r, 'pages')) || null;
+    const isbn = cleanISBN(g(r, 'isbn13')) || cleanISBN(g(r, 'isbn'));
+    const shelves = g(r, 'shelves').split(',').map(s => s.trim())
+      .filter(s => s && !GR_SHELF[s]);
+    const dateRead = toDate(g(r, 'dateRead'));
+    const dateAdded = toDate(g(r, 'dateAdded'));
+
+    out.push({
+      title, series, seriesIndex,
+      author: g(r, 'author'),
+      pages,
+      currentPage: status === 'done' && pages ? pages : 0,
+      status,
+      rating: parseInt(g(r, 'myRating')) || 0,
+      notes: g(r, 'review'),
+      subjects: shelves,
+      cover: isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg?default=false` : '',
+      isbn,
+      addedAt: dateAdded || todayKey(),
+      lastTouched: dateRead || dateAdded || todayKey()
+    });
+  }
+  return out;
+}
+
+let grPending = [];
+function openGoodreads() {
+  sheet('Traer mis libros de Goodreads', `
+  <div class="stack">
+    <div class="banner">${ico('info')}<div><b>Goodreads ya no deja conectarse.</b>
+      Cerraron su API pública en 2020 y no dan llaves nuevas. Pero puedes exportar tu biblioteca
+      completa y traerla de un jalón — sale con más datos que la API, de hecho.</div></div>
+
+    <div>
+      <div class="label" style="margin-bottom:9px">Cómo sacar el archivo</div>
+      <ol style="margin:0;padding-left:19px;font-size:13.5px;line-height:1.75;color:var(--text-2)">
+        <li>Entra a Goodreads <b>desde una computadora</b></li>
+        <li><b>My Books</b> → en la barra izquierda, <b>Tools → Import and Export</b></li>
+        <li>Botón <b>Export Library</b>, espera y descarga el <code style="font-family:var(--font-mono);font-size:11.5px">.csv</code></li>
+        <li>Pásalo a tu teléfono y súbelo aquí</li>
+      </ol>
+    </div>
+
+    <a class="btn btn-block" href="https://www.goodreads.com/review/import" target="_blank" rel="noopener">
+      ${ico('link')}Abrir la página de exportación</a>
+    <button class="btn btn-primary btn-block" data-act="grPick">Elegir el archivo CSV</button>
+    <div id="grOut"></div>
+  </div>`);
+}
+
+function grPick() {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.csv,text/csv';
+  inp.onchange = () => {
+    const f = inp.files[0]; if (!f) return;
+    const fr = new FileReader();
+    fr.onload = () => {
+      const box = $('#grOut'); if (!box) return;
+      try {
+        grPending = readGoodreads(fr.result);
+        if (!grPending.length) throw new Error('No encontré libros dentro.');
+        const n = s => grPending.filter(b => b.status === s).length;
+        const dup = grPending.filter(b => isDupBook(b)).length;
+        box.innerHTML = `
+          <div class="card-flat" style="margin-top:14px">
+            <div class="statgrid">
+              <div class="stat"><b>${n('active')}</b><span>leyendo</span></div>
+              <div class="stat"><b>${n('backlog')}</b><span>pendientes</span></div>
+              <div class="stat"><b>${n('done')}</b><span>leídos</span></div>
+            </div>
+            ${dup ? `<div class="dim" style="font-size:12px;margin-top:12px">
+              ${dup} ya los tienes — esos se saltan.</div>` : ''}
+          </div>
+          <div class="stack" style="gap:8px;margin-top:14px">
+            <button class="btn btn-primary btn-block" data-act="grImport" data-mode="reading">
+              Solo lo que estoy leyendo y lo pendiente
+              <span class="num" style="opacity:.7">${n('active') + n('backlog')}</span></button>
+            <button class="btn btn-block" data-act="grImport" data-mode="all">
+              Todo, incluido lo ya leído <span class="num dim">${grPending.length}</span></button>
+          </div>
+          <div class="dim" style="font-size:11.5px;margin-top:10px;line-height:1.5">
+            Si tienes cientos de libros leídos, traer solo lo activo mantiene la app ligera.
+            Siempre puedes volver a importar.</div>`;
+      } catch (e) {
+        box.innerHTML = `<div class="banner" style="margin-top:14px">${ico('info')}<div>${esc(e.message)}</div></div>`;
+      }
+    };
+    fr.readAsText(f, 'utf-8');
+  };
+  inp.click();
+}
+
+const normTitle = s => String(s || '').toLowerCase().replace(/[^a-z0-9áéíóúñü ]/g, '').replace(/\s+/g, ' ').trim();
+function isDupBook(b) {
+  return S.books.some(x => normTitle(x.title) === normTitle(b.title)
+    && (!b.author || !x.author || normTitle(x.author) === normTitle(b.author)));
+}
+
+function grImport(mode) {
+  const want = mode === 'all' ? grPending : grPending.filter(b => b.status !== 'done');
+  let added = 0, skipped = 0;
+  for (const b of want) {
+    if (isDupBook(b)) { skipped++; continue; }
+    S.books.push({
+      id: uid(), minutes: 0, tags: [], checklist: [], timerStart: null, noTime: false,
+      source: 'goodreads', ...b
+    });
+    added++;
+  }
+  save(true); closeSheet(); S.ui.bookTab = 'activos'; go('libros');
+  toast(added ? `${added} libros traídos${skipped ? ` · ${skipped} repetidos` : ''}` : 'Ya los tenías todos');
+}
+
+/* ==========================================================================
+   CONFIRMACIÓN (sin diálogos del navegador — se bloquean dentro de un visor)
+   ========================================================================== */
+let pendingConfirm = null;
+function askConfirm(msg, label, onYes) {
+  pendingConfirm = onYes;
+  sheet('Confirmar', `
+    <div class="stack">
+      <div style="font-size:14.5px;line-height:1.6">${esc(msg)}</div>
+      <button class="btn btn-danger btn-block" data-act="confirmYes">${esc(label)}</button>
+      <button class="btn btn-ghost btn-block" data-act="confirmNo">Cancelar</button>
+    </div>`);
+}
+
+/* ==========================================================================
+   ACCIONES
+   ========================================================================== */
+function handleAction(act, d, el) {
+  const it = () => findItem(d.kind, d.id);
+  switch (act) {
+    /* navegación */
+    case 'go': go(d.r); closeSheet(); break;
+    case 'tab': S.ui[d.kindtab] = d.v; save(); render(); break;
+    case 'toggleBacklog': S.ui.gameTab = 'pendientes'; go('juegos'); break;
+
+    /* confirmación */
+    case 'confirmYes': { const f = pendingConfirm; pendingConfirm = null; closeSheet(); f && f(); break; }
+    case 'confirmNo': pendingConfirm = null; closeSheet(); break;
+
+    /* ¿qué sigo? */
+    case 'next': openNext(); break;
+    case 'nextTime': nextState.minutes = +d.v; sheet('¿Qué sigo?', nextSheetHTML()); break;
+    case 'nextMood': nextState.mood = nextState.mood === d.v ? null : d.v; sheet('¿Qué sigo?', nextSheetHTML()); break;
+    case 'nextSkip': nextState.skipped.push(d.id); $('#nextResult').innerHTML = nextResultHTML(); break;
+    case 'nextReset': nextState.skipped = []; sheet('¿Qué sigo?', nextSheetHTML()); break;
+    case 'nextGo': {
+      const x = findItem(d.kind, d.id);
+      if (x) { x.status = 'active'; x.lastTouched = todayKey(); save(true); }
+      closeSheet(); go('hoy'); toast('Va. Está en curso.');
+      break;
+    }
+    case 'nextAsk': claudeBridge(promptForBacklog(nextState.minutes, nextState.mood), 'Que Claude elija'); break;
+    case 'askBacklog': claudeBridge(promptForBacklog(null, null), 'Que Claude elija'); break;
+
+    /* tiempo */
+    case 'timerStart': startTimer(d.kind, d.id); closeSheet(); toast('Cronómetro corriendo'); break;
+    case 'timerStop': stopTimer(d.kind, d.id); closeSheet(); break;
+    case 'quick': {
+      const x = it(); if (!x) break;
+      if (x.status === 'backlog') x.status = 'active';
+      logSession(d.kind, d.id, x.title, +d.min);
+      toast(`+${fmtMin(+d.min)} en ${x.title}`);
+      render(); if ($('#sheetBody')) openItem(d.kind, d.id);
+      break;
+    }
+    case 'syncHours': break; // se maneja en change
+
+    /* elementos */
+    case 'addGame': openAdd('game'); break;
+    case 'addBook': openAdd('book'); break;
+    case 'openItem': openItem(d.kind, d.id); break;
+    case 'manualAdd': openManual(d.kind); break;
+    case 'doSearch': runSearch(d.kind); break;
+    case 'pick': {
+      const r = searchCache[+d.i]; if (!r) break;
+      const data = d.kind === 'book'
+        ? { title: r.title, author: r.author, pages: r.pages, cover: r.cover, subjects: r.subjects, currentPage: 0 }
+        : { title: r.title, cover: r.cover, hltbMain: r.hltbMain, metacritic: r.metacritic, tags: r.tags, extId: r.extId, platform: (r.platforms || [])[0] || '' };
+      const created = newItem(d.kind, data);
+      closeSheet(); render(); toast(`"${r.title}" agregado`);
+      if (d.kind === 'game' && r.extId) {
+        API.gameDetail(r.extId).then(det => {
+          if (det) { created.series = det.series || ''; created.website = det.website; save(true); }
+        }).catch(() => { });
+      }
+      break;
+    }
+    case 'saveManual': {
+      const t = $('#mTitle').value.trim();
+      if (!t) { toast('Ponle un título'); break; }
+      const data = { title: t, series: $('#mSeries').value.trim(), status: $('#mStatus').value };
+      if (d.kind === 'book') { data.author = $('#mAuthor').value.trim(); data.pages = +$('#mPages').value || null; data.currentPage = 0; }
+      else { data.platform = $('#mPlatform').value.trim(); data.hltbMain = +$('#mHours').value || null; }
+      newItem(d.kind, data); closeSheet(); render(); toast(`"${t}" agregado`);
+      break;
+    }
+    case 'setStatus': {
+      const x = it(); if (!x) break;
+      x.status = d.v; x.lastTouched = todayKey();
+      if (d.v === 'done') x.percent = 100, x.currentPage = x.pages || x.currentPage;
+      save(true); render();
+      if ($('#sheetBody')) openItem(d.kind, d.id);
+      if (d.v === 'done') toast('Terminado. Bien ahí.');
+      if (d.v === 'dropped') toast('Soltado. Sin culpa.');
+      break;
+    }
+    case 'retomar': { const x = it(); if (x) { x.lastTouched = todayKey(); save(true); render(); toast('Va de nuevo'); } break; }
+    case 'drop': { const x = it(); if (x) { x.status = 'dropped'; x.lastTouched = todayKey(); save(true); render(); toast('Soltado. Sin culpa.'); } break; }
+    case 'toggleTag': {
+      const x = it(); if (!x) break;
+      x.tags = x.tags || [];
+      const i = x.tags.indexOf(d.v);
+      i >= 0 ? x.tags.splice(i, 1) : x.tags.push(d.v);
+      save(true); openItem(d.kind, d.id);
+      break;
+    }
+    case 'addCheck': {
+      const x = it(); if (!x) break;
+      prompt2('¿Qué pendiente?', v => {
+        if (!v) return;
+        x.checklist = x.checklist || [];
+        x.checklist.push({ id: uid(), text: v, done: false });
+        save(true); openItem(d.kind, d.id);
+      });
+      break;
+    }
+    case 'delCheck': {
+      const x = it(); if (!x) break;
+      x.checklist = (x.checklist || []).filter(c => c.id !== d.cid);
+      save(true); openItem(d.kind, d.id);
+      break;
+    }
+    case 'delItem': {
+      const x = it(); if (!x) break;
+      askConfirm(`¿Borrar "${x.title}"? No se puede deshacer.`, 'Borrar', () => {
+        if (d.kind === 'book') S.books = S.books.filter(b => b.id !== d.id);
+        else S.games = S.games.filter(g => g.id !== d.id);
+        save(true); render(); toast('Borrado');
+      });
+      break;
+    }
+    case 'askItem': { const x = it(); if (x) claudeBridge(promptForItem(x, d.kind), x.title); break; }
+    case 'setStars': { const x = it(); if (x) { x.rating = +d.v; save(true); openItem(d.kind, d.id); } break; }
+
+    /* magic */
+    case 'addDeck': openAddDeck(); break;
+    case 'openDeck': openDeck(d.id); break;
+    case 'saveDeck': {
+      const name = $('#dName').value.trim();
+      if (!name) { toast('Ponle nombre'); break; }
+      const deck = {
+        id: uid(), name, format: $('#dFormat').value, commander: $('#dCmd').value.trim(),
+        cards: [], notes: '', createdAt: todayKey()
+      };
+      S.decks.unshift(deck); save(true);
+      const raw = $('#dList').value.trim();
+      closeSheet(); render();
+      if (raw) resolveInto(deck.id, parseList(raw), true);
+      else toast('Deck creado');
+      break;
+    }
+    case 'setDeck': break; // change
+    case 'pasteList': openPasteList(d.id); break;
+    case 'doPaste': {
+      const raw = ($('#pList') || {}).value || '';
+      const replace = ($('#pReplace') || {}).checked;
+      const items = parseList(raw);
+      if (!items.length) { toast('No encontré cartas en ese texto'); break; }
+      resolveInto(d.id, items, replace);
+      break;
+    }
+    case 'delCard': {
+      const dk = S.decks.find(x => x.id === d.id); if (!dk) break;
+      dk.cards = dk.cards.filter(c => c.name !== d.cn);
+      save(true); openDeck(d.id);
+      break;
+    }
+    case 'delDeck': {
+      const dk = S.decks.find(x => x.id === d.id); if (!dk) break;
+      askConfirm(`¿Borrar el deck "${dk.name}"? Sus partidas se quedan en el historial.`, 'Borrar deck', () => {
+        S.decks = S.decks.filter(x => x.id !== d.id); save(true); render(); toast('Deck borrado');
+      });
+      break;
+    }
+    case 'askDeck': { const dk = S.decks.find(x => x.id === d.id); if (dk) claudeBridge(promptForDeck(dk), dk.name); break; }
+    case 'addMatch': openAddMatch(d.deck); break;
+    case 'saveMatch': {
+      const res = $('#wResult .chip.on');
+      S.matches.push({
+        id: uid(), deckId: $('#wDeck').value, opponent: $('#wOpp').value.trim(),
+        result: res ? res.dataset.r : 'W', games: $('#wGames').value.trim(),
+        date: $('#wDate').value || todayKey(), notes: $('#wNotes').value.trim()
+      });
+      save(true); closeSheet(); render(); toast('Partida registrada');
+      break;
+    }
+    case 'delMatch': S.matches = S.matches.filter(m => m.id !== d.id); save(true); render(); break;
+    case 'addCard': openAddCard(); break;
+    case 'doCardSearch': doCardSearch(); break;
+    case 'pickCard': {
+      const c = cardCache[+d.i]; if (!c) break;
+      const ex = S.collection.find(x => x.scryfallId === c.scryfallId);
+      if (ex) ex.qty++;
+      else S.collection.push({ ...c, id: uid(), qty: 1, foil: false, addedAt: todayKey() });
+      save(true); render(); toast(`${c.name} agregada`);
+      break;
+    }
+    case 'delColl': S.collection = S.collection.filter(x => x.id !== d.id); save(true); render(); break;
+    case 'refreshPrices': refreshPrices(); break;
+
+    /* perfil y ajustes */
+    case 'quiz': openQuiz(); break;
+    case 'saveQuiz': {
+      const a = {};
+      $$('[data-quiz]').forEach(g => {
+        a[g.dataset.quiz] = $$('.chip.on', g).map(c => c.dataset.qk);
+      });
+      a.duracion = $('#qDur').value;
+      a.dificultad = $('#qDif').value;
+      a.duracionLibros = $('#qDurL').value;
+      S.profile.answers = a;
+      S.profile.favGames = $('#qFavG').value.split(',').map(s => s.trim()).filter(Boolean);
+      S.profile.favSagas = $('#qFavS').value.split(',').map(s => s.trim()).filter(Boolean);
+      S.profile.done = true;
+      save(true); closeSheet(); render(); toast('Perfil guardado');
+      break;
+    }
+    case 'setSetting': break; // change
+
+    /* goodreads */
+    case 'goodreads': openGoodreads(); break;
+    case 'grPick': grPick(); break;
+    case 'grImport': grImport(d.mode); break;
+
+    /* respaldo */
+    case 'exportJSON': exportJSON(); break;
+    case 'exportCSV': exportCSV(); break;
+    case 'importJSON': importJSON(); break;
+    case 'wipe': askConfirm('Esto borra todos tus juegos, libros, decks y partidas. Exporta un respaldo antes si no estás seguro.', 'Borrar todo', () => {
+      S = structuredClone(BLANK); save(true); applyTheme(); render(); toast('Todo limpio');
+    }); break;
+
+    /* puente con claude */
+    case 'bridgeOpen': {
+      const t = ($('#bridgeTxt') || {}).value || '';
+      window.open('https://claude.ai/new?q=' + encodeURIComponent(t), '_blank', 'noopener');
+      break;
+    }
+    case 'bridgeCopy': {
+      const t = ($('#bridgeTxt') || {}).value || '';
+      navigator.clipboard?.writeText(t).then(() => toast('Copiado — pégalo en Claude'))
+        .catch(() => { const ta = $('#bridgeTxt'); ta.select(); toast('Selecciónalo y cópialo'); });
+      break;
+    }
+    case 'bridgeInline': bridgeInline(); break;
+  }
+}
+
+/* mini-prompt sin diálogos del navegador */
+function prompt2(label, cb) {
+  sheet(label, `<div class="stack">
+    <input type="text" id="p2" placeholder="Escríbelo aquí">
+    <button class="btn btn-primary btn-block" id="p2ok">Agregar</button></div>`, b => {
+    const i = b.querySelector('#p2'); i.focus();
+    const done = () => { const v = i.value.trim(); closeSheet(); cb(v); };
+    b.querySelector('#p2ok').onclick = done;
+    i.onkeydown = e => { if (e.key === 'Enter') done(); };
+  });
+}
+
+/* ---------- resolver listas de Magic ---------- */
+async function resolveInto(deckId, items, replace) {
+  const dk = S.decks.find(x => x.id === deckId); if (!dk) return;
+  const st = $('#pStatus');
+  if (st) st.innerHTML = `<div class="dim" style="font-size:13.5px;padding-top:10px">Resolviendo ${items.length} cartas…</div>`;
+  else toast('Resolviendo lista…');
+  try {
+    const { cards, missing } = await API.resolveList(items.map(i => i.name));
+    const srcOf = n => items.find(i => i.name.toLowerCase() === n.toLowerCase()) || {};
+    const resolved = cards.map(c => {
+      const src = srcOf(c.name);
+      return { ...c, qty: src.qty || 1, proxy: !!src.proxy };
+    });
+    dk.cards = replace ? resolved : mergeCards(dk.cards || [], resolved);
+    save(true); closeSheet(); render();
+    toast(missing.length ? `${resolved.length} cartas · ${missing.length} no encontradas` : `${resolved.length} cartas agregadas`);
+    if (missing.length) setTimeout(() => toast('No encontradas: ' + missing.slice(0, 3).join(', ')), 2800);
+  } catch (e) {
+    if (st) st.innerHTML = `<div class="banner" style="margin-top:10px">${ico('info')}<div>No se pudo conectar a Scryfall. Intenta de nuevo o captura las cartas a mano.</div></div>`;
+    else toast('No se pudo conectar a Scryfall');
+  }
+}
+function mergeCards(a, b) {
+  const map = new Map(a.map(c => [c.name, { ...c }]));
+  b.forEach(c => {
+    const e = map.get(c.name);
+    if (e) { e.qty += c.qty; e.proxy = e.proxy || c.proxy; } // si ya era proxy, se queda proxy
+    else map.set(c.name, c);
+  });
+  return [...map.values()];
+}
+async function refreshPrices() {
+  if (!S.collection.length) return;
+  toast('Actualizando precios…');
+  try {
+    const { cards } = await API.resolveList(S.collection.map(c => c.name));
+    const byName = new Map(cards.map(c => [c.name.toLowerCase(), c]));
+    S.collection.forEach(c => { const f = byName.get(c.name.toLowerCase()); if (f) c.price = f.price; });
+    save(true); render(); toast('Precios actualizados');
+  } catch (e) { toast('No se pudo conectar a Scryfall'); }
+}
+
+/* ==========================================================================
+   ENTRADAS (campos de texto, selects, checkboxes)
+   ========================================================================== */
+function applyInput(el) {
+  const act = el.dataset.act;
+  if (act === 'setField') {
+    const x = findItem(el.dataset.kind, el.dataset.id); if (!x) return;
+    const f = el.dataset.f;
+    let v = el.type === 'number' || el.type === 'range' ? (el.value === '' ? null : +el.value) : el.value;
+    x[f] = v;
+    x.lastTouched = todayKey();
+    if (f === 'currentPage' || f === 'percent' || f === 'pages') {
+      const pct = itemPercent({ ...x, kind: el.dataset.kind });
+      const sheetBar = el.closest('.stack-lg')?.querySelector('.bar > i');
+      if (sheetBar) sheetBar.style.width = pct + '%';
+      const lbl = el.closest('div')?.parentElement?.querySelector('.num');
+      if (lbl && lbl.textContent.includes('%')) lbl.textContent = pct + '%';
+      if (pct >= 100 && x.status === 'active') { x.status = 'done'; toast('¡Terminado!'); }
+      if (pct > 0 && pct < 100 && x.status === 'backlog') x.status = 'active';
+    }
+    save();
+  }
+  else if (act === 'syncHours') {
+    if (el.value === '') return;
+    const x = findItem(el.dataset.kind, el.dataset.id); if (!x) return;
+    const target = Math.round(+el.value * 60);
+    const delta = target - (x.minutes || 0);
+    x.minutes = target; x.lastTouched = todayKey();
+    if (delta > 0) S.sessions.push({ id: uid(), kind: el.dataset.kind, refId: x.id, title: x.title, min: delta, date: todayKey() });
+    save(true); toast(`Total ajustado a ${fmtHrs(target)}`);
+    openItem(el.dataset.kind, el.dataset.id);
+  }
+  else if (act === 'toggleNoTime') {
+    const x = findItem(el.dataset.kind, el.dataset.id); if (!x) return;
+    x.noTime = el.checked; save(true); openItem(el.dataset.kind, el.dataset.id);
+  }
+  else if (act === 'toggleCheck') {
+    const x = findItem(el.dataset.kind, el.dataset.id); if (!x) return;
+    const c = (x.checklist || []).find(c => c.id === el.dataset.cid);
+    if (c) { c.done = el.checked; x.lastTouched = todayKey(); save(true); }
+  }
+  else if (act === 'toggleProxy') {
+    const dk = S.decks.find(x => x.id === el.dataset.id); if (!dk) return;
+    const c = (dk.cards || []).find(c => c.name === el.dataset.cn); if (!c) return;
+    c.proxy = el.checked;
+    save(true);
+    const row = el.closest('tr');
+    if (row) row.classList.toggle('is-proxy', c.proxy);
+    const price = row?.querySelector('td:nth-child(4) span');
+    if (price) price.style.cssText = c.proxy ? 'opacity:.45;text-decoration:line-through' : '';
+    // refresca el resumen de arriba sin cerrar la hoja
+    const s = deckStats(dk);
+    const val = $('#sheetBody .statgrid .stat:nth-child(2) b');
+    if (val) val.innerHTML = `${fmtMoney(s.value).replace('$', '')}<span style="font-size:12px"> usd</span>`;
+    const lbl = $('#sheetBody .statgrid .stat:nth-child(2) span:last-child');
+    if (lbl) lbl.textContent = s.proxyQty ? 'lo que tienes' : 'valor';
+  }
+  else if (act === 'setDeck') {
+    const dk = S.decks.find(x => x.id === el.dataset.id); if (!dk) return;
+    dk[el.dataset.f] = el.value; save();
+  }
+  else if (act === 'setSetting') {
+    const f = el.dataset.f, t = el.dataset.type;
+    if (t === 'bool') S.settings[f] = el.checked;
+    else if (t === 'num') S.settings[f] = +el.value;
+    else if (t === 'hours') S.settings.weeklyGoalMin = Math.round((+el.value || 0) * 60);
+    else S.settings[f] = el.value;
+    save();
+    if (t === 'bool' || t === 'num' || t === 'hours') render();
+  }
+}
+document.addEventListener('input', e => { if (e.target.dataset?.act) applyInput(e.target); });
+document.addEventListener('change', e => { if (e.target.dataset?.act) applyInput(e.target); });
+
+/* cierra hoja → refresca la vista de abajo */
+const _closeSheet = closeSheet;
+closeSheet = function () { _closeSheet(); render(); };
+
+/* ==========================================================================
+   ARRANQUE
+   ========================================================================== */
+render();
+API.probe().then(() => { if (API.online === false) render(); });
+
+</script>
+
+<script>
+/* Service worker: hace que la app abra sin internet */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(e => console.warn('sw:', e));
+  });
+}
+</script>
+</body>
+</html>

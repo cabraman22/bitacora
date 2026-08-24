@@ -1,5 +1,9 @@
-/* Bitácora — cache primero, para que abra sin internet */
-const CACHE = 'bitacora-v1';
+/* Bitácora — service worker
+   La app (index.html) va SIEMPRE a la red primero, para que al reemplazar el
+   archivo la actualización llegue sola en el siguiente arranque. Si no hay
+   internet, cae a la copia guardada. Los iconos sí van desde caché.
+*/
+const CACHE = 'bitacora-v2';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -12,18 +16,38 @@ self.addEventListener('activate', e => {
     .then(() => self.clients.claim()));
 });
 
-self.addEventListener('fetch', e => {
-  const url = new URL(e.request.url);
-  if (e.request.method !== 'GET') return;
+const isApp = (req, url) =>
+  req.mode === 'navigate' || url.pathname.endsWith('/') || url.pathname.endsWith('index.html');
 
-  // Los catálogos (RAWG, Scryfall, Open Library) y la API siempre van a la red.
+self.addEventListener('fetch', e => {
+  const req = e.request;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+
+  // Los catálogos (RAWG, Scryfall, Open Library) y la API van directo a la red.
   if (url.origin !== self.location.origin) return;
 
+  if (isApp(req, url)) {
+    // red primero: así una versión nueva se ve al reabrir
+    e.respondWith(
+      fetch(req).then(res => {
+        const copy = res.clone();
+        caches.open(CACHE).then(c => c.put('./index.html', copy)).catch(() => {});
+        return res;
+      }).catch(() => caches.match('./index.html').then(hit => hit || caches.match('./')))
+    );
+    return;
+  }
+
+  // el resto (iconos, manifest): caché primero, se refresca por detrás
   e.respondWith(
-    caches.match(e.request).then(hit => hit || fetch(e.request).then(res => {
-      const copy = res.clone();
-      caches.open(CACHE).then(c => c.put(e.request, copy)).catch(() => {});
-      return res;
-    }).catch(() => caches.match('./index.html')))
+    caches.match(req).then(hit => {
+      const net = fetch(req).then(res => {
+        const copy = res.clone();
+        caches.open(CACHE).then(c => c.put(req, copy)).catch(() => {});
+        return res;
+      }).catch(() => hit);
+      return hit || net;
+    })
   );
 });

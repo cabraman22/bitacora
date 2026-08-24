@@ -139,6 +139,12 @@ button{cursor:pointer;background:none;border:none;padding:0}
 @media (prefers-reduced-motion: reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
 
 .wrap{max-width:600px;margin:0 auto;padding:0 var(--sp)}
+/* el contenido escala con el ajuste de texto; la barra y el encabezado no */
+#view, .sheet{zoom:var(--fs, 1)}
+:root[data-density="compacto"] .card{padding:11px}
+:root[data-density="compacto"] .stack{gap:9px}
+:root[data-density="amplio"] .card{padding:18px}
+:root[data-density="amplio"] .stack{gap:16px}
 
 /* ============ HEADER ============ */
 .topbar{
@@ -298,7 +304,10 @@ input[type=checkbox]{accent-color:var(--accent)}
   border-top:1px solid var(--border);
   padding-bottom:env(safe-area-inset-bottom);
 }
-.nav-in{max-width:600px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
+.nav-in{max-width:600px;margin:0 auto;display:grid}
+.nav-in.nav-scroll{display:flex;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.nav-in.nav-scroll::-webkit-scrollbar{display:none}
+.nav-in.nav-scroll button{flex:0 0 74px}
 .nav button{
   display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 2px 8px;
   color:var(--text-3);font-size:10.5px;font-weight:500;transition:color .15s;
@@ -381,6 +390,18 @@ table.data tr.is-proxy td:nth-child(2)::after{content:"proxy";font-family:var(--
 .stat span{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-3)}
 .statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 
+.nowcard{background:var(--accent-soft);border-radius:var(--r);padding:13px 15px;
+  border-left:3px solid var(--accent)}
+.nowcard .eyebrow{color:var(--accent-text);opacity:.8}
+.nowcard>div:nth-child(2){color:var(--accent-text)}
+.linkgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.linkgrid a{display:flex;align-items:center;justify-content:center;gap:7px;min-height:42px;
+  border-radius:11px;border:1px solid var(--border);background:var(--surface);color:var(--text);
+  font-size:13.5px;font-weight:600;text-decoration:none;transition:background .15s}
+.linkgrid a:hover{background:var(--surface-2)}
+.swatch{width:34px;height:34px;border-radius:9px;border:2px solid var(--border);cursor:pointer;
+  padding:0;min-height:auto}
+.swatch[aria-pressed="true"]{border-color:var(--text);box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--text)}
 .result-card{animation:settle .4s cubic-bezier(.2,.9,.3,1)}
 @keyframes settle{0%{transform:translateY(10px) scale(.97);opacity:0}100%{transform:none;opacity:1}}
 
@@ -416,7 +437,7 @@ table.data tr.is-proxy td:nth-child(2)::after{content:"proxy";font-family:var(--
    Almacenamiento: localStorage. Sin servidor, sin cuentas.
    ========================================================================== */
 
-const APP_VERSION = '1.2';   // súbelo cada vez que cambie la app
+const APP_VERSION = '1.3';   // súbelo cada vez que cambie la app
 const APP_DATE = '2026-08-24';
 
 /* ---------- utilidades ---------- */
@@ -473,7 +494,10 @@ const I = {
   clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5.2l3.2 2"/>',
   leaf: '<path d="M20 4C10 4 4 9 4 16c0 2 .7 3.4.7 3.4S9 12 18 9c0 0-6 3.5-8.5 10.5 0 0 8.5 1.5 10.5-16z"/>',
   send: '<path d="M4.5 12 20 4.5 15 20l-3.5-6z"/><path d="M11.5 14 20 4.5"/>',
-  link: '<path d="M10 13.5a4 4 0 0 0 5.7 0l2.8-2.8a4 4 0 0 0-5.7-5.7L11.5 6.4"/><path d="M14 10.5a4 4 0 0 0-5.7 0l-2.8 2.8a4 4 0 1 0 5.7 5.7l1.2-1.2"/>'
+  link: '<path d="M10 13.5a4 4 0 0 0 5.7 0l2.8-2.8a4 4 0 0 0-5.7-5.7L11.5 6.4"/><path d="M14 10.5a4 4 0 0 0-5.7 0l-2.8 2.8a4 4 0 1 0 5.7 5.7l1.2-1.2"/>',
+  refresh: '<path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 4.5V10H15"/>',
+  palette: '<path d="M12 3a9 9 0 1 0 0 18c1 0 1.6-.7 1.6-1.5 0-.5-.2-.8-.5-1.1-.3-.3-.5-.7-.5-1.2 0-.8.7-1.5 1.6-1.5H16a5 5 0 0 0 5-5c0-4.1-4-7.7-9-7.7z"/><circle cx="7.5" cy="11.5" r="1.2"/><circle cx="11" cy="7.5" r="1.2"/><circle cx="15.5" cy="8.8" r="1.2"/>',
+  layers: '<path d="M12 3 3 7.5l9 4.5 9-4.5z"/><path d="M3 12.5 12 17l9-4.5"/><path d="M3 17 12 21.5 21 17"/>'
 };
 const ico = (n, w = 1.9) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${I[n] || ''}</svg>`;
 const icoFill = n => `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none">${I[n] || ''}</svg>`;
@@ -486,10 +510,16 @@ const BLANK = {
   settings: {
     showStreaks: true, weeklyGoalMin: 300, calmLimit: 3,
     staleDays: 14, rawgKey: '', anthropicKey: '', model: 'claude-haiku-4-5-20251001',
-    theme: 'auto'
+    theme: 'auto',
+    // apariencia
+    accent: '', tintGame: '', tintBook: '', tintMagic: '', fontScale: 100, density: 'normal',
+    // campos que Raul se inventa por hobby: {game:[{id,label,type}], book:[...], 'mod:x':[...]}
+    customFields: {}
   },
   profile: { done: false, answers: {}, favGames: [], favSagas: [], dealbreakers: [] },
   games: [], books: [], decks: [], matches: [], collection: [],
+  modules: [],            // hobbies que Raul agrega: {id,name,icon,tint,unit}
+  custom: {},             // sus elementos, por id de módulo
   sessions: [],           // {id,kind,refId,title,min,date}
   assistant: []           // {role,content}
 };
@@ -519,6 +549,47 @@ function save(immediate) {
   clearTimeout(saveTimer);
   const doIt = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast('No se pudo guardar: espacio lleno'); } };
   immediate ? doIt() : saveTimer = setTimeout(doIt, 250);
+}
+
+/* ==========================================================================
+   APARIENCIA — acento, tintes por módulo, tamaño de texto y densidad
+   ========================================================================== */
+const ACCENTS = [
+  ['#5FAE97', 'Verde mar'], ['#4C9BD6', 'Azul'], ['#B07CC6', 'Lila'],
+  ['#D98E48', 'Ámbar'], ['#D3695C', 'Coral'], ['#5BAF6B', 'Verde'],
+  ['#C77BA0', 'Rosa'], ['#7E86C9', 'Índigo'], ['#8C9BA5', 'Gris']
+];
+function luminance(hex) {
+  const h = hex.replace('#', '');
+  const v = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+  const [r, g, b] = [0, 2, 4].map(i => parseInt(v.slice(i, i + 2), 16) / 255)
+    .map(c => c <= .03928 ? c / 12.92 : Math.pow((c + .055) / 1.055, 2.4));
+  return .2126 * r + .7152 * g + .0722 * b;
+}
+function applyAppearance() {
+  const r = document.documentElement.style, s = S.settings;
+  const setTint = (varName, hex) => {
+    if (hex) {
+      r.setProperty(varName, hex);
+      r.setProperty(varName + '-soft', `color-mix(in srgb, ${hex} 17%, var(--surface))`);
+    } else {
+      r.removeProperty(varName); r.removeProperty(varName + '-soft');
+    }
+  };
+  if (s.accent) {
+    r.setProperty('--accent', s.accent);
+    r.setProperty('--accent-soft', `color-mix(in srgb, ${s.accent} 17%, var(--surface))`);
+    r.setProperty('--accent-text', s.accent);
+    r.setProperty('--on-accent', luminance(s.accent) > .45 ? '#10171B' : '#FFFFFF');
+  } else {
+    ['--accent', '--accent-soft', '--accent-text', '--on-accent'].forEach(p => r.removeProperty(p));
+  }
+  setTint('--games', s.tintGame);
+  setTint('--books', s.tintBook);
+  setTint('--magic', s.tintMagic);
+  r.setProperty('--fs', ((s.fontScale || 100) / 100).toFixed(2));
+  r.setProperty('--sp', { compacto: '12px', normal: '16px', amplio: '21px' }[s.density] || '16px');
+  document.documentElement.dataset.density = s.density || 'normal';
 }
 
 /* ---------- tema ---------- */
@@ -575,9 +646,43 @@ function logSession(kind, refId, title, min) {
   if (item) { item.minutes = (item.minutes || 0) + Math.round(min); item.lastTouched = todayKey(); }
   save();
 }
+/* 'game' | 'book' | 'mod:<id>' — así los hobbies que agregue Raul usan el mismo motor */
+function listFor(kind) {
+  if (kind === 'game') return S.games;
+  if (kind === 'book') return S.books;
+  if (kind && kind.startsWith('mod:')) {
+    const k = kind.slice(4);
+    if (!S.custom[k]) S.custom[k] = [];
+    return S.custom[k];
+  }
+  return null;
+}
 function findItem(kind, id) {
-  const list = kind === 'game' ? S.games : kind === 'book' ? S.books : null;
+  const list = listFor(kind);
   return list ? list.find(x => x.id === id) : null;
+}
+function moduleOf(kind) {
+  return kind && kind.startsWith('mod:') ? S.modules.find(m => m.id === kind.slice(4)) : null;
+}
+function allKinds() { return ['game', 'book', ...S.modules.map(m => 'mod:' + m.id)]; }
+function everyItem() {
+  return allKinds().flatMap(k => (listFor(k) || []).map(x => ({ ...x, kind: k })));
+}
+
+/* ---------- migración: el viejo checklist se vuelve etapas ---------- */
+function migrate() {
+  let touched = false;
+  for (const kind of allKinds()) {
+    for (const it of listFor(kind) || []) {
+      if (it.checklist && it.checklist.length && !it.stages) {
+        it.stages = it.checklist.map(c => ({ id: c.id, text: c.text, done: !!c.done, section: 'otros' }));
+        touched = true;
+      }
+      if (!it.stages) it.stages = [];
+      if (!it.custom) it.custom = {};
+    }
+  }
+  if (touched) save(true);
 }
 function minutesOn(dateKey) { return S.sessions.filter(s => s.date === dateKey).reduce((a, s) => a + s.min, 0); }
 
@@ -610,18 +715,30 @@ function weekMinutes() {
 }
 
 /* ---------- navegación ---------- */
-const ROUTES = [
-  { id: 'hoy', label: 'Hoy', icon: 'home' },
-  { id: 'juegos', label: 'Juegos', icon: 'game' },
-  { id: 'libros', label: 'Libros', icon: 'book' },
-  { id: 'magic', label: 'Magic', icon: 'magic' },
-  { id: 'yo', label: 'Yo', icon: 'user' }
-];
+function routes() {
+  return [
+    { id: 'hoy', label: 'Hoy', icon: 'home' },
+    { id: 'juegos', label: 'Juegos', icon: 'game' },
+    { id: 'libros', label: 'Libros', icon: 'book' },
+    { id: 'magic', label: 'Magic', icon: 'magic' },
+    ...S.modules.map(m => ({ id: 'mod:' + m.id, label: m.name, emoji: m.icon || '•', tint: m.tint })),
+    { id: 'yo', label: 'Yo', icon: 'user' }
+  ];
+}
 function go(r) { S.ui.route = r; save(); render(); window.scrollTo({ top: 0 }); }
 function renderNav() {
-  $('#nav').innerHTML = ROUTES.map(r =>
-    `<button data-go="${r.id}" ${S.ui.route === r.id ? 'aria-current="page"' : ''}>
-      ${ico(r.icon)}<span>${r.label}</span></button>`).join('');
+  const rs = routes();
+  const nav = $('#nav');
+  nav.className = rs.length > 5 ? 'nav-in nav-scroll' : 'nav-in';
+  nav.style.gridTemplateColumns = rs.length > 5 ? '' : `repeat(${rs.length},1fr)`;
+  nav.innerHTML = rs.map(r => {
+    const on = S.ui.route === r.id;
+    const mark = r.emoji
+      ? `<span style="font-size:19px;line-height:21px;height:21px;display:block">${esc(r.emoji)}</span>`
+      : ico(r.icon);
+    return `<button data-go="${r.id}" ${on ? 'aria-current="page"' : ''}
+      ${on && r.tint ? `style="color:${esc(r.tint)}"` : ''}>${mark}<span>${esc(r.label)}</span></button>`;
+  }).join('');
 }
 
 /* ---------- delegación global de eventos ---------- */
@@ -639,10 +756,16 @@ document.addEventListener('click', e => {
 /* ---------- render principal ---------- */
 function render() {
   renderNav();
-  const v = $('#view');
-  const fn = { hoy: viewHoy, juegos: viewJuegos, libros: viewLibros, magic: viewMagic, yo: viewYo }[S.ui.route] || viewHoy;
-  v.innerHTML = fn();
-  const post = { juegos: null, magic: null }[S.ui.route];
+  const r = S.ui.route;
+  let html;
+  if (r && r.startsWith('mod:')) {
+    if (moduleOf(r)) html = listView(r);
+    else { S.ui.route = 'hoy'; html = viewHoy(); }   // el módulo ya no existe
+  } else {
+    const fn = { hoy: viewHoy, juegos: viewJuegos, libros: viewLibros, magic: viewMagic, yo: viewYo }[r] || viewHoy;
+    html = fn();
+  }
+  $('#view').innerHTML = html;
   if (S.ui.route === 'magic') afterMagic();
   if (S.ui.route === 'yo') afterYo();
 }
@@ -760,6 +883,7 @@ function tagLabel(k) {
 function compatibility(item, kind = 'game') {
   const p = S.profile;
   if (!p.done) return null;
+  if (kind !== 'game' && kind !== 'book') return null;   // los hobbies propios no tienen catálogo que puntuar
   const a = p.answers;
   const tags = new Set(item.tags || []);
   const why = [];
@@ -829,9 +953,7 @@ function compatibility(item, kind = 'game') {
    ¿QUÉ SIGO? — un solo botón, una sola respuesta
    ========================================================================== */
 function candidates() {
-  const gs = S.games.filter(g => g.status === 'active' || g.status === 'backlog').map(g => ({ ...g, kind: 'game' }));
-  const bs = S.books.filter(b => b.status === 'active' || b.status === 'backlog').map(b => ({ ...b, kind: 'book' }));
-  return [...gs, ...bs];
+  return everyItem().filter(c => c.status === 'active' || c.status === 'backlog');
 }
 function whatsNext(minutes, mood, exclude = []) {
   const pool = candidates().filter(c => !exclude.includes(c.id));
@@ -877,12 +999,50 @@ function whatsNext(minutes, mood, exclude = []) {
   });
   return scored.sort((a, b) => b.s - a.s);
 }
-function itemPercent(it) {
-  if (it.kind === 'book' || it.pages !== undefined) {
-    if (!it.pages) return it.percent || 0;
-    return clamp(Math.round((it.currentPage || 0) / it.pages * 100), 0, 100);
+/* ==========================================================================
+   ETAPAS — misiones, capítulos, jefes y coleccionables.
+   Cuando un elemento tiene etapas, el avance sale de ellas y el slider sobra.
+   ========================================================================== */
+const SECTIONS = {
+  historia: { label: 'Historia principal', hint: 'Lo que mueve la trama' },
+  capitulos: { label: 'Capítulos', hint: '' },
+  secundarias: { label: 'Secundarias', hint: 'No bloquean el avance' },
+  coleccionables: { label: 'Coleccionables', hint: '' },
+  jefes: { label: 'Jefes', hint: 'Con notas de estrategia' },
+  logros: { label: 'Logros', hint: '' },
+  otros: { label: 'Otros pendientes', hint: '' }
+};
+const SECTION_ORDER = ['historia', 'capitulos', 'secundarias', 'jefes', 'coleccionables', 'logros', 'otros'];
+const mainSection = kind => kind === 'book' ? 'capitulos' : 'historia';
+
+function stageStats(it, kind) {
+  const st = it.stages || [];
+  const bySection = {};
+  for (const s of st) {
+    const k = SECTIONS[s.section] ? s.section : 'otros';
+    (bySection[k] = bySection[k] || { done: 0, total: 0 }).total++;
+    if (s.done) bySection[k].done++;
   }
+  const main = bySection[mainSection(kind)];
+  const all = { done: st.filter(s => s.done).length, total: st.length };
+  // el avance sigue la trama; lo opcional se ve aparte y no diluye el número
+  const basis = (main && main.total) ? main : all;
+  return { bySection, main, all, basis, percent: basis.total ? Math.round(basis.done / basis.total * 100) : null };
+}
+
+function itemPercent(it) {
+  const kind = it.kind || (it.pages !== undefined ? 'book' : 'game');
+  if ((it.stages || []).length) {
+    const s = stageStats(it, kind);
+    if (s.percent !== null) return s.percent;
+  }
+  if (kind === 'book' && it.pages) return clamp(Math.round((it.currentPage || 0) / it.pages * 100), 0, 100);
   return clamp(it.percent || 0, 0, 100);
+}
+function nextStage(it, kind) {
+  const main = mainSection(kind);
+  const st = it.stages || [];
+  return st.find(s => !s.done && s.section === main) || st.find(s => !s.done) || null;
 }
 
 /* ==========================================================================
@@ -893,9 +1053,10 @@ const STATUS_CLASS = { backlog: '', active: 'pill-active', paused: 'pill-paused'
 
 function coverEl(it) {
   // Open Library devuelve 404 cuando no tiene portada de ese ISBN: dejamos el hueco limpio
-  return it.cover
-    ? `<img class="cover" src="${esc(it.cover)}" alt="" loading="lazy" onerror="this.removeAttribute('src');this.onerror=null">`
-    : `<div class="cover-ph">${ico(it.kind === 'book' ? 'book' : 'game', 1.6)}</div>`;
+  if (it.cover) return `<img class="cover" src="${esc(it.cover)}" alt="" loading="lazy" onerror="this.removeAttribute('src');this.onerror=null">`;
+  const mod = moduleOf(it.kind);
+  if (mod) return `<div class="cover-ph" style="font-size:22px">${esc(mod.icon || '•')}</div>`;
+  return `<div class="cover-ph">${ico(it.kind === 'book' ? 'book' : 'game', 1.6)}</div>`;
 }
 
 function starsRow(kind, id, rating) {
@@ -912,17 +1073,23 @@ function starsRow(kind, id, rating) {
 
 function itemCard(it, opts = {}) {
   const kind = it.kind || (it.pages !== undefined ? 'book' : 'game');
-  const tint = kind === 'book' ? 'tint-books' : 'tint-games';
+  const mod = moduleOf(kind);
+  const tint = mod ? '' : kind === 'book' ? 'tint-books' : 'tint-games';
+  const tintStyle = mod ? ` style="--tint:${esc(mod.tint || 'var(--accent)')}"` : '';
   const pct = itemPercent({ ...it, kind });
   const comp = compatibility(it, kind);
   const running = !!it.timerStart;
   const liveMin = running ? (Date.now() - it.timerStart) / 60000 : 0;
-  const sub = kind === 'book'
-    ? [it.author, it.series ? it.series + (it.seriesIndex ? ` #${it.seriesIndex}` : '') : '',
-    it.rating ? '★'.repeat(it.rating) : ''].filter(Boolean).join(' · ')
-    : [it.platform, it.hltbMain ? `~${it.hltbMain} h` : ''].filter(Boolean).join(' · ');
+  const st = stageStats(it, kind);
+  const nx = nextStage(it, kind);
+  const sub = mod
+    ? [it.series, st.basis.total ? `${st.basis.done}/${st.basis.total}` : ''].filter(Boolean).join(' · ')
+    : kind === 'book'
+      ? [it.author, it.series ? it.series + (it.seriesIndex ? ` #${it.seriesIndex}` : '') : '',
+      it.rating ? '★'.repeat(it.rating) : ''].filter(Boolean).join(' · ')
+      : [it.platform, it.hltbMain ? `~${it.hltbMain} h` : ''].filter(Boolean).join(' · ');
 
-  return `<div class="card stripe ${tint}" data-id="${it.id}">
+  return `<div class="card stripe ${tint}" data-id="${it.id}"${tintStyle}>
     <div class="row" style="align-items:flex-start">
       ${coverEl({ ...it, kind })}
       <div class="grow">
@@ -943,10 +1110,12 @@ function itemCard(it, opts = {}) {
 
     <div style="margin-top:12px">
       <div class="row-between" style="margin-bottom:5px">
-        <span class="eyebrow">Avance</span>
+        <span class="eyebrow">${st.basis.total ? `${st.basis.done} de ${st.basis.total}` : 'Avance'}</span>
         <span class="num" style="font-size:12.5px;font-weight:600">${pct}%</span>
       </div>
       <div class="bar"><i style="width:${pct}%"></i></div>
+      ${nx ? `<div class="dim" style="font-size:12px;margin-top:7px;line-height:1.4">
+        <span style="color:var(--tint,var(--accent));font-weight:600">Sigue:</span> ${esc(nx.text)}</div>` : ''}
     </div>
 
     ${opts.compact ? '' : `
@@ -959,6 +1128,140 @@ function itemCard(it, opts = {}) {
            <button class="btn btn-sm" data-act="quick" data-kind="${kind}" data-id="${it.id}" data-min="60">+1h</button>`}
       <button class="btn btn-sm" data-act="openItem" data-kind="${kind}" data-id="${it.id}">Detalles</button>
     </div>`}
+  </div>`;
+}
+
+/* ---------- bloque de avance dentro del detalle ---------- */
+function progressBlock(it, kind, id) {
+  const isBook = kind === 'book';
+  const st = it.stages || [];
+  const pct = itemPercent({ ...it, kind });
+  const s = stageStats(it, kind);
+  const nx = nextStage(it, kind);
+  const basisLabel = st.length
+    ? (s.main && s.main.total ? `de ${isBook ? 'los capítulos' : 'la historia'}` : 'de tus etapas')
+    : '';
+
+  const sections = SECTION_ORDER.filter(k => s.bySection[k]);
+  const hideDone = !!S.ui.hideDone;
+
+  return `
+  <div>
+    <div class="row-between" style="margin-bottom:8px">
+      <span class="label">Avance ${basisLabel ? `<span class="dim" style="text-transform:none;letter-spacing:0">· ${basisLabel}</span>` : ''}</span>
+      <span class="num" style="font-weight:600">${pct}%</span>
+    </div>
+    <div class="bar"><i style="width:${pct}%"></i></div>
+
+    ${nx ? `<div class="nowcard" style="margin-top:12px">
+      <div class="eyebrow">Vas aquí</div>
+      <div style="font-size:14.5px;font-weight:600;line-height:1.35;margin-top:3px">${esc(nx.text)}</div>
+      <button class="btn btn-sm btn-primary" style="margin-top:10px" data-act="doneStage" data-kind="${kind}" data-id="${id}" data-sid="${nx.id}">
+        ${ico('check')}Ya la hice</button>
+    </div>` : ''}
+
+    ${st.length ? `
+      <div class="row-between" style="margin-top:16px">
+        <span class="label">Etapas</span>
+        <button class="btn btn-ghost btn-sm" data-act="toggleHideDone">${hideDone ? 'ver todas' : 'ocultar hechas'}</button>
+      </div>
+      ${sections.map(k => {
+        const sec = s.bySection[k];
+        const rows = st.filter(x => (SECTIONS[x.section] ? x.section : 'otros') === k)
+          .filter(x => !hideDone || !x.done);
+        return `
+        <div style="margin-top:14px">
+          <div class="row-between" style="margin-bottom:6px">
+            <span style="font-size:13px;font-weight:600">${SECTIONS[k].label}</span>
+            <span class="dim num" style="font-size:11.5px">${sec.done}/${sec.total}</span>
+          </div>
+          <div class="bar" style="height:4px"><i style="width:${sec.total ? sec.done / sec.total * 100 : 0}%"></i></div>
+          <div style="margin-top:4px">
+            ${rows.length ? rows.map(x => `
+              <label class="list-row" style="cursor:pointer;padding:9px 0">
+                <input type="checkbox" ${x.done ? 'checked' : ''}
+                  style="width:19px;height:19px;min-height:auto;flex:none"
+                  data-act="toggleStage" data-kind="${kind}" data-id="${id}" data-sid="${x.id}">
+                <span class="grow" style="font-size:13.5px;line-height:1.4;${x.done ? 'opacity:.45;text-decoration:line-through' : ''}">${esc(x.text)}</span>
+                <button class="iconbtn" style="width:28px;height:28px;border:none;flex:none"
+                  data-act="delStage" data-kind="${kind}" data-id="${id}" data-sid="${x.id}" aria-label="Quitar">${ico('x')}</button>
+              </label>`).join('')
+            : `<div class="dim" style="font-size:12px;padding:6px 0">Todo hecho aquí.</div>`}
+          </div>
+        </div>`;
+      }).join('')}
+    ` : `
+      <div class="card-flat" style="margin-top:14px">
+        <div style="font-size:13.5px;line-height:1.55;color:var(--text-2)">
+          Sin etapas todavía. Con ellas el avance deja de ser una barra que mueves a ojo
+          y pasa a ser ${isBook ? 'en qué capítulo vas' : 'qué misión sigue'}.
+        </div>
+        ${isBook ? `
+          <div class="field-row" style="margin-top:12px">
+            <label class="field"><span class="label">Página actual</span>
+              <input type="number" min="0" value="${it.currentPage || 0}" data-act="setField" data-kind="${kind}" data-id="${id}" data-f="currentPage"></label>
+            <label class="field"><span class="label">Total de páginas</span>
+              <input type="number" min="0" value="${it.pages || ''}" data-act="setField" data-kind="${kind}" data-id="${id}" data-f="pages"></label>
+          </div>`
+        : `<input type="range" min="0" max="100" step="5" value="${pct}" style="margin-top:12px"
+             data-act="setField" data-kind="${kind}" data-id="${id}" data-f="percent">`}
+      </div>`}
+
+    <div class="row" style="gap:6px;margin-top:14px;flex-wrap:wrap">
+      <button class="btn btn-sm" data-act="pasteStages" data-kind="${kind}" data-id="${id}">Pegar lista</button>
+      <button class="btn btn-sm" data-act="claudeStages" data-kind="${kind}" data-id="${id}">${ico('spark')}Pedirla a Claude</button>
+      ${isBook
+      ? `<button class="btn btn-sm" data-act="autoChapters" data-kind="${kind}" data-id="${id}">Capítulos 1…N</button>`
+      : `<button class="btn btn-sm" data-act="wikiStages" data-id="${id}">StrategyWiki</button>
+           <button class="btn btn-sm" data-act="rawgStages" data-id="${id}">Logros</button>`}
+      <button class="btn btn-sm" data-act="addStage" data-kind="${kind}" data-id="${id}">${ico('plus')}Una</button>
+    </div>
+  </div>`;
+}
+
+/* ---------- campos que Raul se inventa ---------- */
+const FIELD_TYPES = { text: 'Texto', number: 'Número', select: 'Opciones', bool: 'Sí / no', date: 'Fecha' };
+
+function customFieldsBlock(it, kind, id) {
+  const fields = (S.settings.customFields || {})[kind] || [];
+  return `
+  <div>
+    <div class="row-between" style="margin-bottom:8px">
+      <span class="label">Tus campos</span>
+      <button class="btn btn-ghost btn-sm" data-act="manageFields" data-kind="${kind}">Configurar</button>
+    </div>
+    ${fields.length ? `<div class="stack" style="gap:10px">${fields.map(f => {
+      const v = (it.custom || {})[f.id] ?? '';
+      const attrs = `data-act="setCustom" data-kind="${kind}" data-id="${id}" data-fid="${f.id}"`;
+      if (f.type === 'bool') return `<label class="row-between" style="cursor:pointer">
+        <span style="font-size:14px">${esc(f.label)}</span>
+        <input type="checkbox" ${v ? 'checked' : ''} style="width:22px;height:22px;min-height:auto;flex:none" ${attrs}></label>`;
+      if (f.type === 'select') return `<label class="field"><span class="label">${esc(f.label)}</span>
+        <select ${attrs}><option value="">—</option>
+        ${(f.options || []).map(o => `<option ${v === o ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select></label>`;
+      const t = f.type === 'number' ? 'number' : f.type === 'date' ? 'date' : 'text';
+      return `<label class="field"><span class="label">${esc(f.label)}</span>
+        <input type="${t}" value="${esc(v)}" ${attrs}></label>`;
+    }).join('')}</div>`
+    : `<div class="dim" style="font-size:12.5px;line-height:1.5">
+        Ninguno todavía. Sirven para lo que solo tú rastreas — la dificultad en la que juegas,
+        si el libro es físico o digital, dónde lo compraste.</div>`}
+  </div>`;
+}
+
+function guideLinks(it, kind) {
+  const q = encodeURIComponent(it.title || '');
+  const links = kind === 'book'
+    ? [['Goodreads', `https://www.goodreads.com/search?q=${q}`],
+    ['Wikipedia', `https://es.wikipedia.org/w/index.php?search=${q}`]]
+    : [['Game8', `https://www.google.com/search?q=site:game8.co+${q}`],
+    ['StrategyWiki', `https://strategywiki.org/w/index.php?search=${q}`],
+    ['Fandom', `https://www.google.com/search?q=site:fandom.com+${q}+wiki`],
+    ['GameFAQs', `https://gamefaqs.gamespot.com/search?game=${q}`]];
+  return `<div>
+    <div class="label" style="margin-bottom:8px">Guías de este título</div>
+    <div class="linkgrid">${links.map(([n, u]) =>
+      `<a href="${esc(u)}" target="_blank" rel="noopener">${ico('link')}${n}</a>`).join('')}</div>
   </div>`;
 }
 
@@ -1073,18 +1376,18 @@ function greeting() {
 }
 
 function viewHoy() {
-  const active = [...S.games.filter(g => g.status === 'active').map(g => ({ ...g, kind: 'game' })),
-  ...S.books.filter(b => b.status === 'active').map(b => ({ ...b, kind: 'book' }))]
+  const all = everyItem();
+  const active = all.filter(x => x.status === 'active')
     .sort((a, b) => daysSince(b.lastTouched) - daysSince(a.lastTouched));
   const shown = active.slice(0, S.settings.calmLimit);
   const overflow = active.length - shown.length;
   const stale = active.filter(x => daysSince(x.lastTouched) >= S.settings.staleDays);
-  const backlogN = S.games.filter(g => g.status === 'backlog').length + S.books.filter(b => b.status === 'backlog').length;
+  const backlogN = all.filter(x => x.status === 'backlog').length;
   const todayMin = minutesOn(todayKey());
   const st = streak();
   const wk = weekMinutes(), goal = S.settings.weeklyGoalMin;
 
-  const empty = !S.games.length && !S.books.length;
+  const empty = !all.length;
 
   return `
   <div class="stack-lg" style="padding-top:18px">
@@ -1298,6 +1601,39 @@ const API = {
     }));
   },
 
+  /* Logros del juego — vienen con la misma llave de RAWG que ya tienes */
+  async achievements(extId) {
+    const key = (S.settings.rawgKey || '').trim();
+    if (!key) throw new Error('nokey');
+    const r = await fetch(`https://api.rawg.io/api/games/${extId}/achievements?key=${encodeURIComponent(key)}&page_size=40`);
+    if (!r.ok) throw new Error('http ' + r.status);
+    const j = await r.json();
+    return (j.results || []).map(a => ({ name: a.name, description: a.description || '', percent: a.percent }));
+  },
+
+  /* StrategyWiki — wiki de guías bajo CC BY-SA, con API abierta de MediaWiki.
+     Usamos su índice de secciones como esqueleto de misiones, citando la fuente. */
+  async wikiSearch(q) {
+    const url = `https://strategywiki.org/w/api.php?action=opensearch&search=${encodeURIComponent(q)}&limit=8&namespace=0&format=json&origin=*`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('http ' + r.status);
+    const j = await r.json();
+    const [, titles = [], , urls = []] = j;
+    return titles.map((t, i) => ({ title: t, url: urls[i] || '' }));
+  },
+  async wikiSections(title) {
+    const url = `https://strategywiki.org/w/api.php?action=parse&page=${encodeURIComponent(title)}&prop=sections&format=json&origin=*`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('http ' + r.status);
+    const j = await r.json();
+    if (j.error) throw new Error(j.error.info || 'no existe esa página');
+    const skip = /^(table of contents|contents|references|external links|see also|notes|credits|gallery|trivia)$/i;
+    return (j.parse.sections || [])
+      .filter(s => +s.toclevel <= 2 && !skip.test((s.line || '').trim()))
+      .map(s => ({ text: (s.line || '').replace(/<[^>]*>/g, '').trim(), level: +s.toclevel }))
+      .filter(s => s.text.length > 1);
+  },
+
   async searchCards(q) {
     const r = await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(q)}&unique=cards&order=name`);
     if (r.status === 404) return [];
@@ -1344,6 +1680,76 @@ function cardFromScryfall(c) {
   };
 }
 
+/* ==========================================================================
+   ACTUALIZAR DATOS INCOMPLETOS
+   Solo rellena lo que está vacío. Nunca pisa algo que Raul haya escrito.
+   ========================================================================== */
+const WANT_FIELDS = {
+  game: [['cover', 'portada'], ['hltbMain', 'duración'], ['metacritic', 'nota'],
+  ['platform', 'plataforma'], ['tags', 'etiquetas'], ['series', 'saga']],
+  book: [['cover', 'portada'], ['author', 'autor'], ['pages', 'páginas'], ['subjects', 'temas']]
+};
+const isEmpty = v => v === undefined || v === null || v === '' || (Array.isArray(v) && !v.length);
+
+function missingFields(it, kind) {
+  return (WANT_FIELDS[kind] || []).filter(([f]) => isEmpty(it[f])).map(([, label]) => label);
+}
+
+async function fillFrom(it, kind) {
+  const res = kind === 'book' ? await API.searchBooks(it.title) : await API.searchGames(it.title);
+  if (!res.length) return [];
+  // el mejor candidato: título idéntico si lo hay, si no el primero
+  const exact = res.find(r => normTitle(r.title) === normTitle(it.title));
+  const src = exact || res[0];
+  const filled = [];
+  for (const [f, label] of WANT_FIELDS[kind]) {
+    if (!isEmpty(it[f])) continue;
+    let v = src[f];
+    if (f === 'platform' && !v) v = (src.platforms || [])[0];
+    if (isEmpty(v)) continue;
+    it[f] = v; filled.push(label);
+  }
+  if (kind === 'game' && src.extId) {
+    if (!it.extId) it.extId = src.extId;
+    if (isEmpty(it.series)) {
+      try {
+        const det = await API.gameDetail(src.extId);
+        if (det && det.series) { it.series = det.series; filled.push('saga'); }
+      } catch (e) { }
+    }
+  }
+  return filled;
+}
+
+async function refreshItem(kind, id) {
+  const it = findItem(kind, id); if (!it) return;
+  toast('Buscando lo que falta…');
+  try {
+    const filled = await fillFrom(it, kind);
+    save(true); openItem(kind, id);
+    toast(filled.length ? `Se llenó: ${filled.join(', ')}` : 'El catálogo tampoco tiene más datos');
+  } catch (e) {
+    toast(e.message === 'nokey' ? 'Falta la llave de RAWG (Yo → Catálogos)' : 'No se pudo conectar al catálogo');
+  }
+}
+
+async function refreshAll() {
+  const pend = [...S.games.map(x => ({ it: x, kind: 'game' })), ...S.books.map(x => ({ it: x, kind: 'book' }))]
+    .filter(({ it, kind }) => missingFields(it, kind).length);
+  if (!pend.length) { toast('No falta nada por completar'); return; }
+  let done = 0, filledTotal = 0;
+  const box = $('#refreshOut');
+  const paint = () => { if (box) box.innerHTML = `<div class="dim" style="font-size:13px;padding-top:10px">Revisando ${done}/${pend.length}…</div>`; };
+  paint();
+  for (const { it, kind } of pend) {
+    try { filledTotal += (await fillFrom(it, kind)).length; } catch (e) { }
+    done++; paint();
+    await new Promise(r => setTimeout(r, 260));   // sin atosigar a los catálogos
+  }
+  save(true); render();
+  toast(filledTotal ? `${filledTotal} datos completados en ${pend.length} títulos` : 'Nada nuevo encontrado');
+}
+
 function netBanner() {
   if (API.online !== false) return '';
   return `<div class="banner">${ico('info')}<div><b>Búsqueda automática apagada.</b>
@@ -1359,8 +1765,11 @@ const TAB_STATUS = { activos: ['active', 'paused'], pendientes: ['backlog'], hec
 
 function listView(kind) {
   const isBook = kind === 'book';
-  const all = (isBook ? S.books : S.games).map(x => ({ ...x, kind }));
-  const tabKey = isBook ? 'bookTab' : 'gameTab';
+  const mod = moduleOf(kind);
+  const title = mod ? mod.name : isBook ? 'Libros' : 'Juegos';
+  const thing = mod ? (mod.unit || 'cosa') : isBook ? 'libro' : 'juego';
+  const all = (listFor(kind) || []).map(x => ({ ...x, kind }));
+  const tabKey = kind === 'game' ? 'gameTab' : kind === 'book' ? 'bookTab' : 'tab_' + kind;
   const tab = S.ui[tabKey] || 'activos';
   const items = all.filter(x => TAB_STATUS[tab].includes(x.status))
     .sort((a, b) => {
@@ -1372,14 +1781,15 @@ function listView(kind) {
   const totalMin = all.reduce((a, x) => a + (x.minutes || 0), 0);
   const doneN = all.filter(x => x.status === 'done').length;
 
+  const addAct = mod ? 'addToModule' : isBook ? 'addBook' : 'addGame';
   return `
   <div class="stack-lg" style="padding-top:18px">
     <div class="row-between">
-      <h1>${isBook ? 'Libros' : 'Juegos'}</h1>
-      <button class="btn btn-primary btn-sm" data-act="${isBook ? 'addBook' : 'addGame'}">${ico('plus')}Agregar</button>
+      <h1>${esc(title)}</h1>
+      <button class="btn btn-primary btn-sm" data-act="${addAct}" data-kind="${kind}">${ico('plus')}Agregar</button>
     </div>
 
-    ${netBanner()}
+    ${mod ? '' : netBanner()}
 
     ${all.length ? `
     <div class="card-flat">
@@ -1391,7 +1801,7 @@ function listView(kind) {
     </div>
 
     <div class="tabs" role="tablist">
-      ${TABS.map(([k, l]) => `<button role="tab" aria-selected="${tab === k}" data-act="tab" data-kindtab="${tabKey}" data-v="${k}">${l}${counts[k] ? ` <span class="num dim">${counts[k]}</span>` : ''}</button>`).join('')}
+      ${TABS.map(([k, l]) => `<button role="tab" aria-selected="${tab === k}" data-act="tab" data-kindtab="${esc(tabKey)}" data-v="${k}">${l}${counts[k] ? ` <span class="num dim">${counts[k]}</span>` : ''}</button>`).join('')}
     </div>
 
     <div class="stack">
@@ -1405,11 +1815,12 @@ function listView(kind) {
     ` : `
     <div class="card">
       <div class="empty">
-        ${ico(isBook ? 'book' : 'game', 1.5)}
-        <p>Aún no agregas ${isBook ? 'ningún libro' : 'ningún juego'}.<br>
-        ${API.online === false ? 'Captúralos a mano — es rápido.' : 'Busca por título y se llena solo.'}</p>
+        ${mod ? `<div style="font-size:30px;margin-bottom:8px">${esc(mod.icon || '•')}</div>` : ico(isBook ? 'book' : 'game', 1.5)}
+        <p>Aún no agregas ${mod ? 'nada aquí' : isBook ? 'ningún libro' : 'ningún juego'}.<br>
+        ${mod ? 'Captúralo como quieras — tú decides qué campos lleva.'
+        : API.online === false ? 'Captúralos a mano — es rápido.' : 'Busca por título y se llena solo.'}</p>
         <div class="row" style="gap:8px;justify-content:center;flex-wrap:wrap">
-          <button class="btn btn-primary" data-act="${isBook ? 'addBook' : 'addGame'}">${ico('plus')}Agregar ${isBook ? 'un libro' : 'un juego'}</button>
+          <button class="btn btn-primary" data-act="${addAct}" data-kind="${kind}">${ico('plus')}Agregar ${mod ? esc(thing) : isBook ? 'un libro' : 'un juego'}</button>
           ${isBook ? `<button class="btn" data-act="goodreads">Traer de Goodreads</button>` : ''}
         </div>
       </div>
@@ -1479,15 +1890,27 @@ let searchCache = [];
 /* ==========================================================================
    HOJA: DETALLE DE UN ELEMENTO
    ========================================================================== */
+/* Vuelve a dibujar la hoja sin perder dónde ibas leyendo — importa cuando
+   una lista de misiones es larga y solo palomeaste una. */
+function reopenItem(kind, id) {
+  const el = document.querySelector('.sheet');
+  const top = el ? el.scrollTop : 0;
+  openItem(kind, id);
+  const el2 = document.querySelector('.sheet');
+  if (el2 && top) el2.scrollTop = top;
+}
+
+function afterStageChange(it, kind) {
+  const s = stageStats(it, kind);
+  if (s.percent === 100 && it.status !== 'done') { it.status = 'done'; toast('¡Terminado!'); }
+  else if (s.percent !== null && s.percent > 0 && it.status === 'backlog') it.status = 'active';
+}
+
 function openItem(kind, id) {
   const it = findItem(kind, id); if (!it) return;
   const isBook = kind === 'book';
-  const pct = itemPercent({ ...it, kind });
   const comp = compatibility(it, kind);
   const running = !!it.timerStart;
-  const guideURL = isBook
-    ? `https://www.goodreads.com/search?q=${encodeURIComponent(it.title)}`
-    : `https://www.google.com/search?q=${encodeURIComponent(it.title + ' guía walkthrough')}`;
 
   sheet(it.title, `
   <div class="stack-lg">
@@ -1509,21 +1932,7 @@ function openItem(kind, id) {
       </div>
     </div>
 
-    <div>
-      <div class="row-between" style="margin-bottom:8px">
-        <span class="label">Avance</span><span class="num" style="font-weight:600">${pct}%</span>
-      </div>
-      ${isBook ? `
-        <div class="field-row">
-          <label class="field"><span class="label">Página actual</span>
-            <input type="number" min="0" value="${it.currentPage || 0}" data-act="setField" data-kind="${kind}" data-id="${id}" data-f="currentPage"></label>
-          <label class="field"><span class="label">Total de páginas</span>
-            <input type="number" min="0" value="${it.pages || ''}" data-act="setField" data-kind="${kind}" data-id="${id}" data-f="pages"></label>
-        </div>`
-      : `<input type="range" min="0" max="100" step="5" value="${pct}" style="width:100%;min-height:auto;padding:0;border:none;background:none"
-            data-act="setField" data-kind="${kind}" data-id="${id}" data-f="percent">`}
-      <div class="bar" style="margin-top:10px"><i style="width:${pct}%"></i></div>
-    </div>
+    ${progressBlock(it, kind, id)}
 
     ${it.noTime ? '' : `
     <div>
@@ -1553,15 +1962,19 @@ function openItem(kind, id) {
       <span style="font-size:13.5px">No llevar tiempo en esto, solo avance</span>
     </label>
 
+    ${moduleOf(kind) ? '' : `
     <div>
       <div class="label" style="margin-bottom:8px">Etiquetas — alimentan tu compatibilidad</div>
       <div class="chips">
         ${['generos', 'mecanicas', 'tonos'].flatMap(g => Object.entries(TAX[g]).map(([k, d]) =>
-          `<button class="chip chip-xs ${(it.tags || []).includes(k) ? 'on' : ''}" data-act="toggleTag" data-kind="${kind}" data-id="${id}" data-v="${k}">${d.label}</button>`)).join('')}
+      `<button class="chip chip-xs ${(it.tags || []).includes(k) ? 'on' : ''}" data-act="toggleTag" data-kind="${kind}" data-id="${id}" data-v="${k}">${d.label}</button>`)).join('')}
       </div>
-    </div>
+    </div>`}
 
-    ${isBook ? `
+    ${moduleOf(kind) ? `
+      <label class="field"><span class="label">Categoría o saga</span>
+        <input type="text" value="${esc(it.series || '')}" data-act="setField" data-kind="${kind}" data-id="${id}" data-f="series"></label>`
+      : isBook ? `
       <div>
         <div class="label" style="margin-bottom:6px">Qué te pareció</div>
         ${starsRow(kind, id, it.rating || 0)}
@@ -1569,6 +1982,10 @@ function openItem(kind, id) {
       <div class="field-row">
         <label class="field"><span class="label">Autor</span><input type="text" value="${esc(it.author || '')}" data-act="setField" data-kind="${kind}" data-id="${id}" data-f="author"></label>
         <label class="field"><span class="label">Saga</span><input type="text" value="${esc(it.series || '')}" data-act="setField" data-kind="${kind}" data-id="${id}" data-f="series"></label>
+      </div>
+      <div class="field-row">
+        <label class="field"><span class="label">Páginas</span><input type="number" min="0" value="${it.pages || ''}" data-act="setField" data-kind="${kind}" data-id="${id}" data-f="pages"></label>
+        <label class="field"><span class="label">Página actual</span><input type="number" min="0" value="${it.currentPage || 0}" data-act="setField" data-kind="${kind}" data-id="${id}" data-f="currentPage"></label>
       </div>`
       : `<div class="field-row">
         <label class="field"><span class="label">Plataforma</span><input type="text" value="${esc(it.platform || '')}" placeholder="Switch, PC…" data-act="setField" data-kind="${kind}" data-id="${id}" data-f="platform"></label>
@@ -1577,30 +1994,206 @@ function openItem(kind, id) {
       <label class="field"><span class="label">Duración estimada (horas)</span>
         <input type="number" min="0" value="${it.hltbMain || ''}" data-act="setField" data-kind="${kind}" data-id="${id}" data-f="hltbMain"></label>`}
 
-    <div>
-      <div class="row-between" style="margin-bottom:8px">
-        <span class="label">Pendientes dentro de esto</span>
-        <button class="btn btn-ghost btn-sm" data-act="addCheck" data-kind="${kind}" data-id="${id}">${ico('plus')}</button>
-      </div>
-      ${(it.checklist || []).length ? (it.checklist || []).map(c => `
-        <label class="list-row" style="cursor:pointer">
-          <input type="checkbox" ${c.done ? 'checked' : ''} style="width:19px;height:19px;min-height:auto;flex:none;accent-color:var(--accent)"
-            data-act="toggleCheck" data-kind="${kind}" data-id="${id}" data-cid="${c.id}">
-          <span class="grow" style="font-size:13.5px;${c.done ? 'opacity:.5;text-decoration:line-through' : ''}">${esc(c.text)}</span>
-          <button class="iconbtn" style="width:30px;height:30px;border:none" data-act="delCheck" data-kind="${kind}" data-id="${id}" data-cid="${c.id}">${ico('x')}</button>
-        </label>`).join('')
-      : `<div class="dim" style="font-size:12.5px">Nada apuntado. Útil para "conseguir X" o "terminar el capítulo 4".</div>`}
-    </div>
+    ${customFieldsBlock(it, kind, id)}
 
     <label class="field"><span class="label">Notas — dónde te quedaste</span>
       <textarea placeholder="Me quedé en…" data-act="setField" data-kind="${kind}" data-id="${id}" data-f="notes">${esc(it.notes || '')}</textarea></label>
 
+    ${moduleOf(kind) ? '' : guideLinks(it, kind)}
+
+    ${(it.sources || []).length ? `<div>
+      <div class="label" style="margin-bottom:7px">De dónde salieron estas etapas</div>
+      ${it.sources.map(s => `<div class="dim" style="font-size:11.5px;line-height:1.5">
+        <a href="${esc(s.url)}" target="_blank" rel="noopener" style="color:var(--text-2)">${esc(s.name)}</a> · ${esc(s.license)}
+      </div>`).join('')}
+    </div>` : ''}
+
     <div class="stack" style="gap:8px">
       <button class="btn btn-primary btn-block" data-act="askItem" data-kind="${kind}" data-id="${id}">${ico('spark')}Preguntar a Claude sobre esto</button>
-      <a class="btn btn-block" href="${esc(guideURL)}" target="_blank" rel="noopener">${ico('link')}Buscar guía</a>
+      ${kind === 'game' || kind === 'book' ? `
+        <button class="btn btn-block" data-act="refreshItem" data-kind="${kind}" data-id="${id}">
+          ${ico('refresh')}Actualizar datos${missingFields(it, kind).length ? ` <span class="chip chip-xs" style="margin-left:2px">faltan ${missingFields(it, kind).length}</span>` : ''}</button>` : ''}
       <button class="btn btn-block btn-danger" data-act="delItem" data-kind="${kind}" data-id="${id}">${ico('trash')}Borrar</button>
     </div>
   </div>`);
+}
+
+/* ==========================================================================
+   LLENAR ETAPAS
+   ========================================================================== */
+function parseStageLines(text) {
+  return text.split('\n')
+    .map(l => l.replace(/^\s*(?:[-*•–—]|\d+[.)]|\(\d+\)|#+)\s*/, '').trim())
+    .map(l => l.replace(/\s*\[[^\]]*\]\s*$/, '').trim())
+    .filter(l => l.length > 1 && l.length < 200);
+}
+function addStages(kind, id, texts, section) {
+  const it = findItem(kind, id); if (!it) return 0;
+  it.stages = it.stages || [];
+  const have = new Set(it.stages.map(s => s.text.toLowerCase()));
+  let n = 0;
+  for (const t of texts) {
+    if (have.has(t.toLowerCase())) continue;
+    it.stages.push({ id: uid(), text: t, done: false, section });
+    have.add(t.toLowerCase()); n++;
+  }
+  it.lastTouched = todayKey();
+  save(true);
+  return n;
+}
+function sectionPicker(kind, sel) {
+  const opts = kind === 'book'
+    ? ['capitulos', 'otros']
+    : ['historia', 'secundarias', 'jefes', 'coleccionables', 'logros', 'otros'];
+  return `<label class="field"><span class="label">¿En qué sección?</span>
+    <select id="stSection">${opts.map(k =>
+    `<option value="${k}" ${k === sel ? 'selected' : ''}>${SECTIONS[k].label}</option>`).join('')}</select></label>`;
+}
+
+function openPasteStages(kind, id) {
+  const isBook = kind === 'book';
+  sheet('Pegar lista', `
+  <div class="stack">
+    <div class="dim" style="font-size:13px;line-height:1.55">
+      Copia la lista de donde sea — Game8, una wiki, un foro — y pégala aquí.
+      Quita solo los números y viñetas; una línea, una etapa.</div>
+    ${sectionPicker(kind, isBook ? 'capitulos' : 'historia')}
+    <label class="field"><span class="label">Pega aquí</span>
+      <textarea id="stText" style="min-height:190px;font-size:13.5px"
+        placeholder="${isBook ? '1. El camino de piedra&#10;2. Una posada silenciosa' : '1. Salir de la meseta&#10;2. Conseguir la paravela&#10;3. Torre de Hyrule'}"></textarea></label>
+    <button class="btn btn-primary btn-block" data-act="doPasteStages" data-kind="${kind}" data-id="${id}">Convertir en etapas</button>
+  </div>`, b => b.querySelector('#stText').focus());
+}
+
+function openAddStage(kind, id) {
+  sheet('Agregar etapa', `
+  <div class="stack">
+    <label class="field"><span class="label">¿Qué es?</span>
+      <input type="text" id="stOne" placeholder="Vencer al jefe del templo"></label>
+    ${sectionPicker(kind, kind === 'book' ? 'capitulos' : 'historia')}
+    <button class="btn btn-primary btn-block" data-act="doAddStage" data-kind="${kind}" data-id="${id}">Agregar</button>
+  </div>`, b => {
+    const i = b.querySelector('#stOne'); i.focus();
+    i.onkeydown = e => { if (e.key === 'Enter') b.querySelector('[data-act="doAddStage"]').click(); };
+  });
+}
+
+function openAutoChapters(kind, id) {
+  const it = findItem(kind, id);
+  sheet('Capítulos automáticos', `
+  <div class="stack">
+    <div class="dim" style="font-size:13px;line-height:1.55">
+      Si sabes cuántos capítulos tiene, los creo del 1 al último y solo vas palomeando.</div>
+    <div class="field-row">
+      <label class="field"><span class="label">¿Cuántos?</span>
+        <input type="number" id="chN" min="1" max="300" value="20"></label>
+      <label class="field"><span class="label">Empezar en</span>
+        <input type="number" id="chFrom" min="0" value="1"></label>
+    </div>
+    <label class="field"><span class="label">Cómo llamarlos</span>
+      <input type="text" id="chWord" value="Capítulo"></label>
+    <button class="btn btn-primary btn-block" data-act="doAutoChapters" data-kind="${kind}" data-id="${id}">Crear</button>
+    <div class="dim" style="font-size:11.5px">Ya tienes ${(it.stages || []).length} etapas; estas se suman.</div>
+  </div>`);
+}
+
+function promptForStages(it, kind) {
+  const isBook = kind === 'book';
+  return isBook
+    ? `Dame la lista de capítulos de "${it.title}"${it.author ? ` de ${it.author}` : ''}.
+
+Formato: una línea por capítulo, solo el nombre o el número, sin numeración añadida, sin explicaciones, sin introducción. Nada más la lista para poder copiarla y pegarla.
+
+Si no conoces los capítulos exactos de ese libro, dímelo en una sola línea en vez de inventarlos.`
+    : `Dame la lista de misiones principales de "${it.title}" en orden, sin spoilers de trama — solo los nombres de las misiones o zonas.
+
+Formato: una línea por misión, sin numeración añadida, sin explicaciones, sin introducción. Nada más la lista para poder copiarla y pegarla.
+
+Si no conoces ese juego con certeza, dímelo en una sola línea en vez de inventar misiones.`;
+}
+
+/* ---------- StrategyWiki ---------- */
+let wikiCache = [];
+function openWikiStages(id) {
+  const it = findItem('game', id); if (!it) return;
+  sheet('Buscar en StrategyWiki', `
+  <div class="stack">
+    <div class="banner banner-accent">${ico('info')}<div>StrategyWiki es una wiki de guías libre, bajo licencia
+      Creative Commons BY-SA. Traemos su índice como esqueleto de misiones y guardamos el enlace a la fuente.</div></div>
+    <label class="field"><span class="label">Buscar el juego</span>
+      <div class="row"><input type="search" id="wq" class="grow" value="${esc(it.title)}" autocomplete="off">
+      <button class="btn" data-act="doWikiSearch">${ico('search')}</button></div></label>
+    <div id="wres"></div>
+  </div>`, b => {
+    doWikiSearch();
+    const q = b.querySelector('#wq');
+    q.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); doWikiSearch(); } };
+  });
+  wikiTarget = id;
+}
+let wikiTarget = null;
+async function doWikiSearch() {
+  const q = ($('#wq') || {}).value?.trim(); const box = $('#wres');
+  if (!box || !q) return;
+  box.innerHTML = `<div class="dim" style="font-size:13.5px">Buscando…</div>`;
+  try {
+    wikiCache = await API.wikiSearch(q);
+    if (!wikiCache.length) { box.innerHTML = `<div class="dim" style="font-size:13.5px">StrategyWiki no tiene guía de ese título.</div>`; return; }
+    box.innerHTML = `<div class="searchres">${wikiCache.map((w, i) =>
+      `<button data-act="pickWiki" data-i="${i}"><span class="grow">
+        <b style="display:block;font-size:14px">${esc(w.title)}</b>
+        <span class="dim" style="font-size:11.5px">strategywiki.org</span></span></button>`).join('')}</div>`;
+  } catch (e) {
+    box.innerHTML = `<div class="banner">${ico('info')}<div>No se pudo conectar a StrategyWiki.</div></div>`;
+  }
+}
+async function pickWiki(i) {
+  const w = wikiCache[+i]; if (!w) return;
+  const box = $('#wres');
+  box.innerHTML = `<div class="dim" style="font-size:13.5px">Leyendo el índice…</div>`;
+  try {
+    const secs = await API.wikiSections(w.title);
+    if (!secs.length) { box.innerHTML = `<div class="dim" style="font-size:13.5px">Esa página no tiene un índice aprovechable. Prueba otra.</div>`; return; }
+    wikiSections = secs;
+    box.innerHTML = `
+      <div class="card-flat" style="margin-top:12px">
+        <div class="row-between" style="margin-bottom:8px">
+          <span class="label">${secs.length} secciones</span>
+          <a href="${esc(w.url)}" target="_blank" rel="noopener" class="dim" style="font-size:11.5px">ver la guía</a>
+        </div>
+        <div style="max-height:210px;overflow-y:auto;font-size:13px;line-height:1.75">
+          ${secs.slice(0, 60).map(s => `<div style="${s.level > 1 ? 'padding-left:14px;color:var(--text-2)' : 'font-weight:600'}">${esc(s.text)}</div>`).join('')}
+        </div>
+      </div>
+      ${sectionPicker('game', 'historia')}
+      <button class="btn btn-primary btn-block" style="margin-top:12px" data-act="doWikiImport" data-url="${esc(w.url)}" data-title="${esc(w.title)}">
+        Traer estas ${secs.length} como etapas</button>`;
+  } catch (e) {
+    box.innerHTML = `<div class="banner">${ico('info')}<div>${esc(e.message)}</div></div>`;
+  }
+}
+let wikiSections = [];
+
+/* ---------- logros de RAWG ---------- */
+async function importAchievements(id) {
+  const it = findItem('game', id); if (!it) return;
+  toast('Buscando logros…');
+  try {
+    let extId = it.extId;
+    if (!extId) {
+      const res = await API.searchGames(it.title);
+      if (!res.length) { toast('No encontré ese juego en el catálogo'); return; }
+      extId = (res.find(r => normTitle(r.title) === normTitle(it.title)) || res[0]).extId;
+      it.extId = extId;
+    }
+    const list = await API.achievements(extId);
+    if (!list.length) { toast('Ese juego no tiene logros registrados'); return; }
+    const n = addStages('game', id, list.map(a => a.name), 'logros');
+    save(true); openItem('game', id);
+    toast(n ? `${n} logros agregados` : 'Ya los tenías todos');
+  } catch (e) {
+    toast(e.message === 'nokey' ? 'Falta la llave de RAWG (Yo → Catálogos)' : 'No se pudieron traer los logros');
+  }
 }
 
 /* ==========================================================================
@@ -1608,15 +2201,17 @@ function openItem(kind, id) {
    ========================================================================== */
 function openManual(kind) {
   const isBook = kind === 'book';
-  sheet(isBook ? 'Nuevo libro' : 'Nuevo juego', `
+  const mod = moduleOf(kind);
+  sheet(mod ? `Nuevo en ${mod.name}` : isBook ? 'Nuevo libro' : 'Nuevo juego', `
   <div class="stack">
     <label class="field"><span class="label">Título</span><input type="text" id="mTitle" placeholder="Obligatorio"></label>
-    ${isBook
-      ? `<div class="field-row">
+    ${mod ? ''
+      : isBook
+        ? `<div class="field-row">
            <label class="field"><span class="label">Autor</span><input type="text" id="mAuthor"></label>
            <label class="field"><span class="label">Páginas</span><input type="number" id="mPages" min="0"></label>
          </div>`
-      : `<div class="field-row">
+        : `<div class="field-row">
            <label class="field"><span class="label">Plataforma</span><input type="text" id="mPlatform" placeholder="Switch"></label>
            <label class="field"><span class="label">Duración (h)</span><input type="number" id="mHours" min="0"></label>
          </div>`}
@@ -1633,14 +2228,178 @@ function openManual(kind) {
 
 function newItem(kind, data) {
   const base = {
-    id: uid(), status: 'backlog', minutes: 0, tags: [], notes: '', checklist: [],
+    id: uid(), status: 'backlog', minutes: 0, tags: [], notes: '', stages: [], custom: {},
     lastTouched: todayKey(), addedAt: todayKey(), timerStart: null, noTime: false,
-    ...data
+    percent: 0, ...data
   };
-  if (kind === 'book') { base.currentPage = base.currentPage || 0; S.books.unshift(base); }
-  else { base.percent = base.percent || 0; S.games.unshift(base); }
+  if (kind === 'book') base.currentPage = base.currentPage || 0;
+  const list = listFor(kind);
+  if (list) list.unshift(base);
   save(true);
   return base;
+}
+
+/* ==========================================================================
+   HOBBIES QUE RAUL AGREGA
+   ========================================================================== */
+const MOD_TINTS = ['#C86F58', '#D2A03F', '#7E86C9', '#5FAE97', '#B07CC6', '#4C9BD6', '#C77BA0', '#8C9BA5'];
+
+function openModules() {
+  sheet('Tus hobbies', `
+  <div class="stack-lg">
+    <div class="muted" style="font-size:13.5px;line-height:1.55">
+      Juegos, Libros y Magic vienen de fábrica. Aquí puedes agregar los tuyos —
+      series, películas, entrenamientos, lo que sea. Traen lo mismo: estados, avance por etapas,
+      tiempo, notas y compatibilidad.</div>
+
+    ${S.modules.length ? `<div class="stack">${S.modules.map(m => {
+      const n = (S.custom[m.id] || []).length;
+      return `<div class="card">
+        <div class="row-between">
+          <div class="row" style="gap:11px">
+            <span style="font-size:24px">${esc(m.icon || '•')}</span>
+            <div>
+              <h3>${esc(m.name)}</h3>
+              <div class="dim" style="font-size:12px;margin-top:2px">${n} ${n === 1 ? 'elemento' : 'elementos'}</div>
+            </div>
+          </div>
+          <span style="width:14px;height:14px;border-radius:50%;background:${esc(m.tint || 'var(--accent)')};display:block"></span>
+        </div>
+        <div class="row" style="gap:7px;margin-top:12px">
+          <button class="btn btn-sm" data-act="manageFields" data-kind="mod:${m.id}">Sus campos</button>
+          <button class="btn btn-sm btn-danger" data-act="delModule" data-id="${m.id}">Borrar</button>
+        </div>
+      </div>`;
+    }).join('')}</div>` : ''}
+
+    <div class="card stack">
+      <h3>Agregar un hobby</h3>
+      <div class="field-row">
+        <label class="field"><span class="label">Nombre</span>
+          <input type="text" id="modName" placeholder="Series"></label>
+        <label class="field"><span class="label">Ícono</span>
+          <input type="text" id="modIcon" maxlength="2" placeholder="📺" style="text-align:center;font-size:20px"></label>
+      </div>
+      <label class="field"><span class="label">¿Cómo le llamas a cada cosa?</span>
+        <input type="text" id="modUnit" placeholder="serie"></label>
+      <div>
+        <div class="label" style="margin-bottom:8px">Color</div>
+        <div class="row" style="gap:8px;flex-wrap:wrap" id="modTints">
+          ${MOD_TINTS.map((c, i) => `<button class="swatch" data-tint="${c}" aria-pressed="${i === 0}"
+            style="background:${c}" aria-label="Color ${i + 1}"></button>`).join('')}
+        </div>
+      </div>
+      <button class="btn btn-primary btn-block" data-act="saveModule">Crear hobby</button>
+    </div>
+  </div>`, b => {
+    b.querySelector('#modTints').addEventListener('click', e => {
+      const s = e.target.closest('[data-tint]'); if (!s) return;
+      b.querySelectorAll('#modTints .swatch').forEach(x => x.setAttribute('aria-pressed', 'false'));
+      s.setAttribute('aria-pressed', 'true');
+    });
+  });
+}
+
+function slugify(s) {
+  return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 24) || 'hobby';
+}
+
+/* ---------- apariencia ---------- */
+function openAppearance() {
+  const s = S.settings;
+  const row = (act, f, current, extra = '') => `
+    <div class="row" style="gap:8px;flex-wrap:wrap">
+      <button class="swatch" data-act="${act}" ${extra} data-v="auto" aria-pressed="${!current}"
+        style="background:linear-gradient(135deg,var(--surface-2) 50%,var(--border) 50%)" aria-label="Automático"></button>
+      ${ACCENTS.map(([c, n]) => `<button class="swatch" data-act="${act}" ${extra} data-v="${c}"
+        aria-pressed="${current === c}" style="background:${c}" aria-label="${n}"></button>`).join('')}
+    </div>`;
+
+  sheet('Apariencia', `
+  <div class="stack-lg">
+    <div>
+      <div class="label" style="margin-bottom:3px">Color principal</div>
+      <div class="dim" style="font-size:11.5px;margin-bottom:10px">Botones, barras de avance, lo que está activo</div>
+      ${row('setAccent', 'accent', s.accent)}
+    </div>
+
+    <div>
+      <div class="label" style="margin-bottom:10px">Color de Juegos</div>
+      ${row('setTint', 'tintGame', s.tintGame, 'data-f="tintGame"')}
+    </div>
+    <div>
+      <div class="label" style="margin-bottom:10px">Color de Libros</div>
+      ${row('setTint', 'tintBook', s.tintBook, 'data-f="tintBook"')}
+    </div>
+    <div>
+      <div class="label" style="margin-bottom:10px">Color de Magic</div>
+      ${row('setTint', 'tintMagic', s.tintMagic, 'data-f="tintMagic"')}
+    </div>
+
+    <div>
+      <div class="row-between" style="margin-bottom:10px">
+        <span class="label">Tamaño del texto</span>
+        <span class="num" id="fsOut" style="font-size:12.5px;font-weight:600">${s.fontScale || 100}%</span>
+      </div>
+      <input type="range" min="85" max="140" step="5" value="${s.fontScale || 100}"
+        data-act="setAppearance" data-f="fontScale">
+    </div>
+
+    <div>
+      <div class="label" style="margin-bottom:10px">Qué tan apretado</div>
+      <div class="chips">
+        ${[['compacto', 'Compacto'], ['normal', 'Normal'], ['amplio', 'Amplio']].map(([k, l]) =>
+    `<button class="chip ${(s.density || 'normal') === k ? 'on' : ''}" data-act="setDensity" data-v="${k}">${l}</button>`).join('')}
+      </div>
+    </div>
+
+    <div class="card-flat">
+      <div class="eyebrow" style="margin-bottom:9px">Así se ve</div>
+      <div class="row" style="gap:10px;align-items:center">
+        <button class="btn btn-primary btn-sm">Botón</button>
+        <span class="chip chip-xs chip-games">Juegos</span>
+        <span class="chip chip-xs chip-books">Libros</span>
+        <span class="chip chip-xs chip-magic">Magic</span>
+      </div>
+      <div class="bar" style="margin-top:12px"><i style="width:62%"></i></div>
+    </div>
+
+    <button class="btn btn-block" data-act="resetLook">Volver a los colores de fábrica</button>
+  </div>`);
+}
+
+/* ---------- campos propios ---------- */
+function openFields(kind) {
+  const mod = moduleOf(kind);
+  const name = mod ? mod.name : kind === 'book' ? 'Libros' : 'Juegos';
+  const fields = (S.settings.customFields || {})[kind] || [];
+  sheet(`Campos de ${name}`, `
+  <div class="stack-lg">
+    <div class="muted" style="font-size:13.5px;line-height:1.55">
+      Lo que agregues aquí aparece en cada ${mod ? (mod.unit || 'elemento') : kind === 'book' ? 'libro' : 'juego'}.
+      Sirve para lo que solo tú rastreas.</div>
+
+    ${fields.length ? `<div class="stack">${fields.map(f => `
+      <div class="card-flat row-between">
+        <div>
+          <b style="font-size:14px">${esc(f.label)}</b>
+          <div class="dim" style="font-size:11.5px;margin-top:2px">${FIELD_TYPES[f.type]}${(f.options || []).length ? ' · ' + esc(f.options.join(', ')) : ''}</div>
+        </div>
+        <button class="iconbtn" style="border:none" data-act="delField" data-kind="${kind}" data-fid="${f.id}">${ico('trash')}</button>
+      </div>`).join('')}</div>` : ''}
+
+    <div class="card stack">
+      <h3>Nuevo campo</h3>
+      <label class="field"><span class="label">Cómo se llama</span>
+        <input type="text" id="fLabel" placeholder="Dificultad elegida"></label>
+      <label class="field"><span class="label">Qué tipo de dato</span>
+        <select id="fType">${Object.entries(FIELD_TYPES).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select></label>
+      <label class="field"><span class="label">Si es de opciones, sepáralas con comas</span>
+        <input type="text" id="fOpts" placeholder="Fácil, Normal, Difícil"></label>
+      <button class="btn btn-primary btn-block" data-act="addField" data-kind="${kind}">Agregar campo</button>
+    </div>
+  </div>`, b => b.querySelector('#fLabel').focus());
 }
 
 /* ==========================================================================
@@ -2115,6 +2874,57 @@ function viewYo() {
         <label class="field" style="margin-top:12px"><span class="label">Llave de RAWG</span>
           <input type="text" placeholder="Pégala aquí" value="${esc(S.settings.rawgKey || '')}" data-act="setSetting" data-f="rawgKey"></label>
         <a class="btn btn-sm btn-block" style="margin-top:10px" href="https://rawg.io/apidocs" target="_blank" rel="noopener">${ico('link')}Conseguir una gratis</a>
+        <div class="divider" style="margin:14px 0"></div>
+        ${(() => {
+      const pend = [...S.games.map(x => ({ it: x, k: 'game' })), ...S.books.map(x => ({ it: x, k: 'book' }))]
+        .filter(({ it, k }) => missingFields(it, k).length);
+      return `<div class="muted" style="font-size:13px;line-height:1.55">
+            ${pend.length
+          ? `<b style="color:var(--text)">${pend.length} título${pend.length === 1 ? '' : 's'} con datos incompletos.</b>
+               Puedo volver a preguntarle a los catálogos y rellenar solo lo que falte — nunca pisa lo que tú escribiste.`
+          : 'Todos tus títulos tienen sus datos completos.'}</div>
+          ${pend.length ? `<button class="btn btn-sm btn-block" style="margin-top:11px" data-act="refreshAll">
+            ${ico('refresh')}Completar lo que falta</button>` : ''}
+          <div id="refreshOut"></div>`;
+    })()}
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><h2>Cómo se ve y qué rastrea</h2></div>
+      <div class="stack">
+        <button class="card" style="width:100%;text-align:left;display:block" data-act="appearance">
+          <div class="row-between">
+            <div class="row" style="gap:11px">
+              <span style="width:20px;height:20px;color:var(--accent)">${ico('palette')}</span>
+              <div><b style="font-size:14.5px">Apariencia</b>
+                <div class="dim" style="font-size:12px;margin-top:2px">Colores, tamaño de texto, densidad</div></div>
+            </div>
+            <span class="dim" style="width:18px;height:18px">${ico('chev')}</span>
+          </div>
+        </button>
+        <button class="card" style="width:100%;text-align:left;display:block" data-act="modules">
+          <div class="row-between">
+            <div class="row" style="gap:11px">
+              <span style="width:20px;height:20px;color:var(--accent)">${ico('layers')}</span>
+              <div><b style="font-size:14.5px">Tus hobbies</b>
+                <div class="dim" style="font-size:12px;margin-top:2px">${S.modules.length
+      ? S.modules.map(m => esc(m.name)).join(', ')
+      : 'Agrega los que quieras además de los tres de fábrica'}</div></div>
+            </div>
+            <span class="dim" style="width:18px;height:18px">${ico('chev')}</span>
+          </div>
+        </button>
+        <div class="card">
+          <div class="row-between">
+            <div><b style="font-size:14.5px">Campos propios</b>
+              <div class="dim" style="font-size:12px;margin-top:2px">Datos que solo tú rastreas</div></div>
+          </div>
+          <div class="row" style="gap:7px;margin-top:11px;flex-wrap:wrap">
+            <button class="btn btn-sm" data-act="manageFields" data-kind="game">En juegos</button>
+            <button class="btn btn-sm" data-act="manageFields" data-kind="book">En libros</button>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -2339,6 +3149,14 @@ function exportCSV() {
   });
   S.collection.forEach(c => rows.push(['carta', c.name, c.setName || '', '', `x${c.qty}`, '', '', '',
     c.foil ? 'foil' : '', c.addedAt || '', '']));
+  S.modules.forEach(m => (S.custom[m.id] || []).forEach(x => {
+    const kind = 'mod:' + m.id;
+    const fields = (S.settings.customFields || {})[kind] || [];
+    rows.push([m.name, x.title, '', x.series || '', STATUS_LABEL[x.status],
+      itemPercent({ ...x, kind }), ((x.minutes || 0) / 60).toFixed(1), x.rating || '',
+      fields.map(f => `${f.label}=${(x.custom || {})[f.id] ?? ''}`).join('|'),
+      x.addedAt || '', x.lastTouched || '']);
+  }));
   const csv = rows.map(r => r.map(v => {
     const s = String(v ?? '');
     return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
@@ -2611,7 +3429,7 @@ function handleAction(act, d, el) {
       if (x.status === 'backlog') x.status = 'active';
       logSession(d.kind, d.id, x.title, +d.min);
       toast(`+${fmtMin(+d.min)} en ${x.title}`);
-      render(); if ($('#sheetBody')) openItem(d.kind, d.id);
+      render(); if ($('#sheetBody')) reopenItem(d.kind, d.id);
       break;
     }
     case 'syncHours': break; // se maneja en change
@@ -2619,7 +3437,7 @@ function handleAction(act, d, el) {
     /* elementos */
     case 'addGame': openAdd('game'); break;
     case 'addBook': openAdd('book'); break;
-    case 'openItem': openItem(d.kind, d.id); break;
+    case 'openItem': reopenItem(d.kind, d.id); break;
     case 'manualAdd': openManual(d.kind); break;
     case 'doSearch': runSearch(d.kind); break;
     case 'pick': {
@@ -2639,9 +3457,11 @@ function handleAction(act, d, el) {
     case 'saveManual': {
       const t = $('#mTitle').value.trim();
       if (!t) { toast('Ponle un título'); break; }
-      const data = { title: t, series: $('#mSeries').value.trim(), status: $('#mStatus').value };
-      if (d.kind === 'book') { data.author = $('#mAuthor').value.trim(); data.pages = +$('#mPages').value || null; data.currentPage = 0; }
-      else { data.platform = $('#mPlatform').value.trim(); data.hltbMain = +$('#mHours').value || null; }
+      // los hobbies propios no traen los campos de juegos ni de libros
+      const val = sel => { const el = $(sel); return el ? el.value.trim() : ''; };
+      const data = { title: t, series: val('#mSeries'), status: $('#mStatus').value };
+      if (d.kind === 'book') { data.author = val('#mAuthor'); data.pages = +val('#mPages') || null; data.currentPage = 0; }
+      else if (d.kind === 'game') { data.platform = val('#mPlatform'); data.hltbMain = +val('#mHours') || null; }
       newItem(d.kind, data); closeSheet(); render(); toast(`"${t}" agregado`);
       break;
     }
@@ -2650,7 +3470,7 @@ function handleAction(act, d, el) {
       x.status = d.v; x.lastTouched = todayKey();
       if (d.v === 'done') x.percent = 100, x.currentPage = x.pages || x.currentPage;
       save(true); render();
-      if ($('#sheetBody')) openItem(d.kind, d.id);
+      if ($('#sheetBody')) reopenItem(d.kind, d.id);
       if (d.v === 'done') toast('Terminado. Bien ahí.');
       if (d.v === 'dropped') toast('Soltado. Sin culpa.');
       break;
@@ -2662,23 +3482,139 @@ function handleAction(act, d, el) {
       x.tags = x.tags || [];
       const i = x.tags.indexOf(d.v);
       i >= 0 ? x.tags.splice(i, 1) : x.tags.push(d.v);
-      save(true); openItem(d.kind, d.id);
+      save(true); reopenItem(d.kind, d.id);
       break;
     }
-    case 'addCheck': {
+    /* etapas */
+    case 'toggleHideDone': S.ui.hideDone = !S.ui.hideDone; save(); openItem(d.kind || 'game', d.id); break;
+    case 'doneStage': {
       const x = it(); if (!x) break;
-      prompt2('¿Qué pendiente?', v => {
-        if (!v) return;
-        x.checklist = x.checklist || [];
-        x.checklist.push({ id: uid(), text: v, done: false });
-        save(true); openItem(d.kind, d.id);
+      const s = (x.stages || []).find(s => s.id === d.sid);
+      if (s) { s.done = true; x.lastTouched = todayKey(); afterStageChange(x, d.kind); save(true); reopenItem(d.kind, d.id); }
+      break;
+    }
+    case 'delStage': {
+      const x = it(); if (!x) break;
+      x.stages = (x.stages || []).filter(s => s.id !== d.sid);
+      save(true); reopenItem(d.kind, d.id);
+      break;
+    }
+    case 'addStage': openAddStage(d.kind, d.id); break;
+    case 'doAddStage': {
+      const t = ($('#stOne') || {}).value?.trim();
+      if (!t) { toast('Escribe algo'); break; }
+      addStages(d.kind, d.id, [t], $('#stSection').value);
+      closeSheet(); reopenItem(d.kind, d.id);
+      break;
+    }
+    case 'pasteStages': openPasteStages(d.kind, d.id); break;
+    case 'doPasteStages': {
+      const lines = parseStageLines(($('#stText') || {}).value || '');
+      if (!lines.length) { toast('No encontré líneas aprovechables'); break; }
+      const n = addStages(d.kind, d.id, lines, $('#stSection').value);
+      closeSheet(); reopenItem(d.kind, d.id);
+      toast(n ? `${n} etapas agregadas` : 'Ya las tenías todas');
+      break;
+    }
+    case 'claudeStages': {
+      const x = it(); if (!x) break;
+      claudeBridge(promptForStages(x, d.kind), `Lista para ${x.title}`);
+      break;
+    }
+    case 'autoChapters': openAutoChapters(d.kind, d.id); break;
+    case 'doAutoChapters': {
+      const n = clamp(+$('#chN').value || 0, 1, 300);
+      const from = +$('#chFrom').value || 1;
+      const word = ($('#chWord').value || 'Capítulo').trim();
+      const texts = Array.from({ length: n }, (_, i) => `${word} ${from + i}`);
+      const added = addStages(d.kind, d.id, texts, d.kind === 'book' ? 'capitulos' : 'historia');
+      closeSheet(); reopenItem(d.kind, d.id);
+      toast(`${added} ${word.toLowerCase()}s creados`);
+      break;
+    }
+    case 'wikiStages': openWikiStages(d.id); break;
+    case 'doWikiSearch': doWikiSearch(); break;
+    case 'pickWiki': pickWiki(d.i); break;
+    case 'doWikiImport': {
+      const sec = ($('#stSection') || {}).value || 'historia';
+      const n = addStages('game', wikiTarget, wikiSections.map(s => s.text), sec);
+      const x = findItem('game', wikiTarget);
+      if (x) {
+        x.sources = x.sources || [];
+        if (!x.sources.some(s => s.url === d.url))
+          x.sources.push({ name: 'StrategyWiki: ' + d.title, url: d.url, license: 'CC BY-SA 3.0' });
+        save(true);
+      }
+      closeSheet(); openItem('game', wikiTarget);
+      toast(`${n} etapas desde StrategyWiki`);
+      break;
+    }
+    case 'rawgStages': importAchievements(d.id); break;
+
+    /* datos incompletos */
+    case 'refreshItem': refreshItem(d.kind, d.id); break;
+    case 'refreshAll': refreshAll(); break;
+
+    /* hobbies propios */
+    case 'modules': openModules(); break;
+    case 'addToModule': openManual(d.kind); break;
+    case 'saveModule': {
+      const name = ($('#modName') || {}).value?.trim();
+      if (!name) { toast('Ponle nombre'); break; }
+      let id = slugify(name), n = 2;
+      while (S.modules.some(m => m.id === id)) id = slugify(name) + '-' + n++;
+      const tint = ($('#modTints .swatch[aria-pressed="true"]') || {}).dataset?.tint || MOD_TINTS[0];
+      S.modules.push({
+        id, name, icon: ($('#modIcon').value || '•').trim().slice(0, 2),
+        unit: ($('#modUnit').value || '').trim() || 'elemento', tint, createdAt: todayKey()
+      });
+      S.custom[id] = S.custom[id] || [];
+      save(true); closeSheet(); go('mod:' + id);
+      toast(`"${name}" creado`);
+      break;
+    }
+    case 'delModule': {
+      const m = S.modules.find(x => x.id === d.id); if (!m) break;
+      const n = (S.custom[m.id] || []).length;
+      askConfirm(`¿Borrar "${m.name}"${n ? ` y sus ${n} elementos` : ''}? No se puede deshacer.`, 'Borrar hobby', () => {
+        S.modules = S.modules.filter(x => x.id !== d.id);
+        delete S.custom[d.id];
+        delete S.settings.customFields['mod:' + d.id];
+        if (S.ui.route === 'mod:' + d.id) S.ui.route = 'hoy';
+        save(true); render(); toast('Borrado');
       });
       break;
     }
-    case 'delCheck': {
-      const x = it(); if (!x) break;
-      x.checklist = (x.checklist || []).filter(c => c.id !== d.cid);
-      save(true); openItem(d.kind, d.id);
+
+    /* apariencia */
+    case 'appearance': openAppearance(); break;
+    case 'setAccent': S.settings.accent = d.v === 'auto' ? '' : d.v; save(); applyAppearance(); openAppearance(); break;
+    case 'setTint': S.settings[d.f] = d.v === 'auto' ? '' : d.v; save(); applyAppearance(); openAppearance(); break;
+    case 'setDensity': S.settings.density = d.v; save(); applyAppearance(); openAppearance(); break;
+    case 'resetLook': {
+      Object.assign(S.settings, { accent: '', tintGame: '', tintBook: '', tintMagic: '', fontScale: 100, density: 'normal' });
+      save(); applyAppearance(); openAppearance(); toast('Como al principio');
+      break;
+    }
+
+    /* campos propios */
+    case 'manageFields': openFields(d.kind); break;
+    case 'addField': {
+      const label = ($('#fLabel') || {}).value?.trim();
+      if (!label) { toast('Ponle nombre al campo'); break; }
+      const cf = S.settings.customFields;
+      cf[d.kind] = cf[d.kind] || [];
+      cf[d.kind].push({
+        id: uid(), label, type: $('#fType').value,
+        options: ($('#fOpts').value || '').split(',').map(s => s.trim()).filter(Boolean)
+      });
+      save(true); openFields(d.kind);
+      break;
+    }
+    case 'delField': {
+      const cf = S.settings.customFields;
+      cf[d.kind] = (cf[d.kind] || []).filter(f => f.id !== d.fid);
+      save(true); openFields(d.kind);
       break;
     }
     case 'delItem': {
@@ -2691,7 +3627,7 @@ function handleAction(act, d, el) {
       break;
     }
     case 'askItem': { const x = it(); if (x) claudeBridge(promptForItem(x, d.kind), x.title); break; }
-    case 'setStars': { const x = it(); if (x) { x.rating = +d.v; save(true); openItem(d.kind, d.id); } break; }
+    case 'setStars': { const x = it(); if (x) { x.rating = +d.v; save(true); reopenItem(d.kind, d.id); } break; }
 
     /* magic */
     case 'addDeck': openAddDeck(); break;
@@ -2900,6 +3836,29 @@ function applyInput(el) {
     const x = findItem(el.dataset.kind, el.dataset.id); if (!x) return;
     x.noTime = el.checked; save(true); openItem(el.dataset.kind, el.dataset.id);
   }
+  else if (act === 'toggleStage') {
+    const x = findItem(el.dataset.kind, el.dataset.id); if (!x) return;
+    const s = (x.stages || []).find(s => s.id === el.dataset.sid); if (!s) return;
+    s.done = el.checked;
+    x.lastTouched = todayKey();
+    afterStageChange(x, el.dataset.kind);
+    save(true);
+    reopenItem(el.dataset.kind, el.dataset.id);
+  }
+  else if (act === 'setCustom') {
+    const x = findItem(el.dataset.kind, el.dataset.id); if (!x) return;
+    x.custom = x.custom || {};
+    x.custom[el.dataset.fid] = el.type === 'checkbox' ? el.checked
+      : el.type === 'number' ? (el.value === '' ? '' : +el.value) : el.value;
+    x.lastTouched = todayKey();
+    save();
+  }
+  else if (act === 'setAppearance') {
+    const f = el.dataset.f;
+    S.settings[f] = el.type === 'range' || el.type === 'number' ? +el.value : el.value;
+    save(); applyAppearance();
+    if (f === 'fontScale') { const o = $('#fsOut'); if (o) o.textContent = el.value + '%'; }
+  }
   else if (act === 'toggleCheck') {
     const x = findItem(el.dataset.kind, el.dataset.id); if (!x) return;
     const c = (x.checklist || []).find(c => c.id === el.dataset.cid);
@@ -2945,6 +3904,8 @@ closeSheet = function () { _closeSheet(); render(); };
 /* ==========================================================================
    ARRANQUE
    ========================================================================== */
+migrate();
+applyAppearance();
 render();
 API.probe().then(() => { if (API.online === false) render(); });
 

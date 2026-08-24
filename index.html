@@ -416,6 +416,9 @@ table.data tr.is-proxy td:nth-child(2)::after{content:"proxy";font-family:var(--
    Almacenamiento: localStorage. Sin servidor, sin cuentas.
    ========================================================================== */
 
+const APP_VERSION = '1.2';   // súbelo cada vez que cambie la app
+const APP_DATE = '2026-08-24';
+
 /* ---------- utilidades ---------- */
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -2150,8 +2153,14 @@ function viewYo() {
       </div>
     </section>
 
-    ${dropped ? `<div class="dim" style="font-size:12px;text-align:center;padding-bottom:8px">
+    ${dropped ? `<div class="dim" style="font-size:12px;text-align:center">
       Has soltado ${dropped} cosa${dropped === 1 ? '' : 's'}. Eso también es avanzar.</div>` : ''}
+
+    <div class="dim" style="font-size:11px;text-align:center;padding-bottom:8px;font-family:var(--font-mono)">
+      Bitácora ${APP_VERSION} · ${APP_DATE}
+      <button class="btn btn-ghost btn-sm" style="min-height:26px;font-size:11px;margin-left:4px"
+        data-act="checkUpdate">buscar actualización</button>
+    </div>
   </div>`;
 }
 
@@ -2354,6 +2363,29 @@ function importJSON() {
     fr.readAsText(f);
   };
   inp.click();
+}
+
+/* ==========================================================================
+   BUSCAR ACTUALIZACIÓN
+   Tira el caché del service worker y recarga, para no quedarse con una copia
+   vieja cuando ya subiste archivos nuevos.
+   ========================================================================== */
+async function checkUpdate() {
+  toast('Buscando…');
+  try {
+    if ('serviceWorker' in navigator) {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg) await reg.update();
+    }
+    if (window.caches) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
+    toast('Recargando con la versión más nueva…');
+    setTimeout(() => location.reload(), 700);
+  } catch (e) {
+    toast('No se pudo comprobar. Revisa tu conexión.');
+  }
 }
 
 /* ==========================================================================
@@ -2745,6 +2777,9 @@ function handleAction(act, d, el) {
       break;
     }
     case 'setSetting': break; // change
+
+    /* actualización */
+    case 'checkUpdate': checkUpdate(); break;
 
     /* goodreads */
     case 'goodreads': openGoodreads(); break;
